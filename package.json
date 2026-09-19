@@ -1,0 +1,32 @@
+{
+  "name": "proyecto_plataformaeducativa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "start": "node dist/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JorgeCuevasGastelum/Proyecto_PlataformaEducativa.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/JorgeCuevasGastelum/Proyecto_PlataformaEducativa/issues"
+  },
+  "homepage": "https://github.com/JorgeCuevasGastelum/Proyecto_PlataformaEducativa#readme",
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}
