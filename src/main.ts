@@ -14,7 +14,7 @@ try {
 }
 
 console.log('\nRechazado por cupo agotado');
-console.log('Sofiaintenta inscribirse a Estructuras de Datos, que ya tiene su unico lugar ocupado por Juan.');
+console.log('Sofia intenta inscribirse a Estructuras de Datos, que ya tiene su único lugar ocupado por Juan.');
 try {
   await servicio.realizarCargaAcademica(3, 4);
   console.log('No se esperaba que esto funcionara.');
