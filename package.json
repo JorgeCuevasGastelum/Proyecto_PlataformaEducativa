@@ -7,10 +7,16 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "tsx src/main.ts",
+    "dev": "npm run build && concurrently -k \"tsc --watch --preserveWatchOutput\" \"node --watch dist/api.js\"",
+    "demo": "tsx src/main.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "start": "node dist/main.js"
+    "start": "node dist/api.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "node scripts/migrar.mjs",
+    "db:seed": "tsx prisma/seed.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "test:api": "npm run build && node scripts/pruebas-api.mjs"
   },
   "repository": {
     "type": "git",
@@ -20,13 +26,37 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "bugs": {
     "url": "https://github.com/JorgeCuevasGastelum/Proyecto_PlataformaEducativa/issues"
   },
   "homepage": "https://github.com/JorgeCuevasGastelum/Proyecto_PlataformaEducativa#readme",
   "devDependencies": {
+    "@types/express": "5.0.6",
     "@types/node": "^26.6.2",
+    "@types/supertest": "7.2.1",
+    "concurrently": "10.0.6",
+    "prisma": "6.19.3",
+    "supertest": "7.3.1",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2"
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@nestjs/common": "11.2.7",
+    "@nestjs/core": "11.2.7",
+    "@nestjs/jwt": "11.0.2",
+    "@nestjs/platform-express": "11.2.7",
+    "@nestjs/swagger": "11.4.7",
+    "@prisma/adapter-mariadb": "6.19.3",
+    "@prisma/client": "6.19.3",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "dotenv": "18.0.8",
+    "helmet": "8.3.0",
+    "mariadb": "3.5.4",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
   }
 }

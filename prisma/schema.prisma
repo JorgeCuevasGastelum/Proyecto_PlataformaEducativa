@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  alumno
+  maestro
+  administrador
+}
+
+enum DiaSemana {
+  lunes
+  martes
+  miercoles
+  jueves
+  viernes
+  sabado
+}
+
+enum EstadoInscripcion {
+  activa
+  baja
+}
+
+enum ConceptoDePago {
+  inscripcion
+  colegiatura
+}
+
+enum EstadoDePago {
+  pendiente
+  pagado
+}
+
+model Carrera {
+  id     Int @id @default(autoincrement())
+  clave  String @unique @db.VarChar(40)
+  nombre String @db.VarChar(150)
+  planes PlanDeEstudios[]
+}
+
+model PlanDeEstudios {
+  id        Int @id @default(autoincrement())
+  clave     String @unique @db.VarChar(40)
+  carreraId Int
+  carrera   Carrera @relation(fields: [carreraId], references: [id])
+  materias  MateriaEnPlan[]
+  alumnos   Alumno[]
+}
+
+model Materia {
+  id          Int @id @default(autoincrement())
+  clave       String @unique @db.VarChar(40)
+  nombre      String @db.VarChar(150)
+  descripcion String @db.VarChar(2000)
+  creditos    Int
+  planes      MateriaEnPlan[]
+  grupos      Grupo[]
+  prerrequisitos Prerrequisito[] @relation("MateriaObjetivo")
+  dependientes   Prerrequisito[] @relation("MateriaRequerida")
+}
+
+model MateriaEnPlan {
+  planId    Int
+  materiaId Int
+  plan      PlanDeEstudios @relation(fields: [planId], references: [id])
+  materia   Materia @relation(fields: [materiaId], references: [id])
+  @@id([planId, materiaId])
+  @@index([materiaId])
+}
+
+model Prerrequisito {
+  materiaId       Int
+  prerrequisitoId Int
+  materia        Materia @relation("MateriaObjetivo", fields: [materiaId], references: [id])
+  prerrequisito   Materia @relation("MateriaRequerida", fields: [prerrequisitoId], references: [id])
+  @@id([materiaId, prerrequisitoId])
+  @@index([prerrequisitoId])
+}
+
+model Alumno {
+  id Int @id @default(autoincrement())
+  matricula String @unique @db.VarChar(40)
+  nombre String @db.VarChar(150)
+  planDeEstudiosId Int
+  planDeEstudios PlanDeEstudios @relation(fields: [planDeEstudiosId], references: [id])
+  inscripciones Inscripcion[]
+  pagos Pago[]
+  usuario Usuario?
+}
+
+model Maestro {
+  id Int @id @default(autoincrement())
+  numeroEmpleado String @unique @db.VarChar(40)
+  nombre String @db.VarChar(150)
+  grupos Grupo[]
+  usuario Usuario?
+}
+
+model Administrador {
+  id Int @id @default(autoincrement())
+  nombre String @db.VarChar(150)
+  usuario Usuario?
+}
+
+model PeriodoEscolar {
+  id Int @id @default(autoincrement())
+  clave String @unique @db.VarChar(40)
+  fechaAperturaCarga DateTime @db.DateTime(3)
+  fechaCierreCarga DateTime @db.DateTime(3)
+  creditosMaximos Int
+  habilitado Boolean @default(false)
+  grupos Grupo[]
+  pagos Pago[]
+  avisos Aviso[]
+}
+
+model Grupo {
+  id Int @id @default(autoincrement())
+  materiaId Int
+  periodoId Int
+  clave String @db.VarChar(40)
+  maestroId Int
+  cupoMaximo Int
+  materia Materia @relation(fields: [materiaId], references: [id])
+  periodo PeriodoEscolar @relation(fields: [periodoId], references: [id])
+  maestro Maestro @relation(fields: [maestroId], references: [id])
+  horario BloqueHorario[]
+  inscripciones Inscripcion[]
+  @@unique([materiaId, periodoId, clave])
+  @@index([periodoId])
+  @@index([maestroId])
+}
+
+model BloqueHorario {
+  id Int @id @default(autoincrement())
+  grupoId Int
+  diaSemana DiaSemana
+  minutoInicio Int
+  minutoFin Int
+  grupo Grupo @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  @@index([grupoId])
+}
+
+model Inscripcion {
+  id Int @id @default(autoincrement())
+  alumnoId Int
+  grupoId Int
+  fechaRegistro DateTime @db.DateTime(3)
+  estadoActual EstadoInscripcion @default(activa)
+  calificacion Int?
+  alumno Alumno @relation(fields: [alumnoId], references: [id])
+  grupo Grupo @relation(fields: [grupoId], references: [id])
+  @@index([alumnoId])
+  @@index([grupoId, estadoActual])
+}
+
+model Pago {
+  id Int @id @default(autoincrement())
+  alumnoId Int
+  periodoId Int
+  concepto ConceptoDePago
+  monto Decimal @db.Decimal(12, 2)
+  fechaLimite DateTime @db.DateTime(3)
+  estado EstadoDePago @default(pendiente)
+  fechaPago DateTime? @db.DateTime(3)
+  alumno Alumno @relation(fields: [alumnoId], references: [id])
+  periodo PeriodoEscolar @relation(fields: [periodoId], references: [id])
+  @@index([alumnoId])
+  @@index([periodoId])
+}
+
+model Aviso {
+  id Int @id @default(autoincrement())
+  titulo String @db.VarChar(150)
+  contenido String @db.VarChar(4000)
+  periodoId Int
+  fechaPublicacion DateTime @db.DateTime(3)
+  periodo PeriodoEscolar @relation(fields: [periodoId], references: [id])
+  @@index([periodoId])
+}
+
+model Usuario {
+  id Int @id @default(autoincrement())
+  correoInstitucional String @unique @db.VarChar(254)
+  contrasenaHash String @db.VarChar(255)
+  rol Rol
+  alumnoId Int? @unique
+  maestroId Int? @unique
+  administradorId Int? @unique
+  alumno Alumno? @relation(fields: [alumnoId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  maestro Maestro? @relation(fields: [maestroId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  administrador Administrador? @relation(fields: [administradorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+}
+
+// Serializa las escrituras del avance sin acoplar el dominio a Prisma.
+model Mutex {
+  id Int @id
+}

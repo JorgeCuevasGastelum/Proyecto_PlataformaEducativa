@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant C as Cliente
+    participant A as API
+    participant D as Dominio
+    participant B as MySQL
+    C->>A: POST /api/auth/sesiones
+    A->>D: iniciarSesion
+    D->>B: buscar usuario
+    B-->>D: usuario y hash
+    D->>D: verificar scrypt
+    D-->>A: identidad y rol
+    A-->>C: JWT firmado con expiración
+    C->>A: recurso protegido + Bearer JWT
+    A->>A: verificar firma, expiración, emisor y audiencia
+    A->>A: comprobar rol y DTO
+    A->>D: caso de uso con identidad del token
+    D->>B: datos por contrato
+    A-->>C: respuesta uniforme

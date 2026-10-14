@@ -14,5 +14,10 @@
 
     // Recommended Options
     "strict": true,
-  }
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "tests", "prisma"]
 }

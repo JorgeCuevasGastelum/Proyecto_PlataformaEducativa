@@ -1,4 +1,5 @@
-import { LONGITUD_MINIMA_CONTRASENA } from './entidades.js';
+import { ServicioRegistro } from './servicio-registro.js';
+import type { DatosNuevoAlumno, DatosNuevoMaestro } from './servicio-registro.js';
 import type {
   Alumno,
   Aviso,
@@ -10,25 +11,18 @@ import type {
   Pago,
   PeriodoEscolar,
   PlanDeEstudios,
-  Rol,
   Sesion,
 } from './entidades.js';
 import {
-  AlumnoInvalidoError,
   AlumnoNoEncontradoError,
   ClaveDeMateriaDuplicadaError,
-  ContrasenaDebilError,
-  CorreoDuplicadoError,
   EmpalmeDeMaestroError,
   GrupoDuplicadoError,
   GrupoInvalidoError,
   GrupoNoEncontradoError,
-  MaestroInvalidoError,
   MaestroNoEncontradoError,
   MateriaInvalidaError,
   MateriaNoEncontradaError,
-  MatriculaDuplicadaError,
-  NumeroEmpleadoDuplicadoError,
   OperacionNoAutorizadaError,
   PagoInvalidoError,
   PagoNoEncontradoError,
@@ -58,21 +52,6 @@ interface DatosNuevoGrupo {
   horario: BloqueHorario[];
 }
 
-interface DatosNuevoAlumno {
-  matricula: string;
-  nombre: string;
-  correoInstitucional: string;
-  contrasena: string;
-  planDeEstudiosId: number;
-}
-
-interface DatosNuevoMaestro {
-  numeroEmpleado: string;
-  nombre: string;
-  correoInstitucional: string;
-  contrasena: string;
-}
-
 interface DatosNuevoCargo {
   alumnoId: number;
   periodoId: number;
@@ -89,47 +68,14 @@ export class ServicioAdministracion {
 
   // --- Personas y cuentas ---
 
-  // RN-12
   async registrarAlumno(sesion: Sesion, datos: DatosNuevoAlumno): Promise<Alumno> {
     await this.verificarAdministrador(sesion);
-
-    if (!datos.matricula || !datos.nombre || !datos.correoInstitucional) {
-      throw new AlumnoInvalidoError('faltan datos obligatorios');
-    }
-
-    const plan = await this.repo.buscarPlanDeEstudiosPorId(datos.planDeEstudiosId);
-    if (!plan) throw new PlanDeEstudiosNoEncontradoError(String(datos.planDeEstudiosId));
-
-    const existente = await this.repo.buscarAlumnoPorMatricula(datos.matricula);
-    if (existente) throw new MatriculaDuplicadaError(datos.matricula);
-
-    const { correo, contrasenaHash } = await this.prepararCuenta(datos.correoInstitucional, datos.contrasena);
-
-    const alumno = await this.repo.crearAlumno({
-      matricula: datos.matricula,
-      nombre: datos.nombre,
-      planDeEstudiosId: plan.id,
-    });
-    await this.crearUsuario(correo, contrasenaHash, 'alumno', alumno.id);
-    return alumno;
+    return new ServicioRegistro(this.repo, this.hash).registrarAlumno(datos);
   }
 
-  // RN-13
   async registrarMaestro(sesion: Sesion, datos: DatosNuevoMaestro): Promise<Maestro> {
     await this.verificarAdministrador(sesion);
-
-    if (!datos.numeroEmpleado || !datos.nombre || !datos.correoInstitucional) {
-      throw new MaestroInvalidoError('faltan datos obligatorios');
-    }
-
-    const existente = await this.repo.buscarMaestroPorNumeroEmpleado(datos.numeroEmpleado);
-    if (existente) throw new NumeroEmpleadoDuplicadoError(datos.numeroEmpleado);
-
-    const { correo, contrasenaHash } = await this.prepararCuenta(datos.correoInstitucional, datos.contrasena);
-
-    const maestro = await this.repo.crearMaestro({ numeroEmpleado: datos.numeroEmpleado, nombre: datos.nombre });
-    await this.crearUsuario(correo, contrasenaHash, 'maestro', maestro.id);
-    return maestro;
+    return new ServicioRegistro(this.repo, this.hash).registrarMaestro(datos);
   }
 
   // --- Catalogo: materias, planes y grupos ---
@@ -294,20 +240,4 @@ export class ServicioAdministracion {
     if (!admin) throw new OperacionNoAutorizadaError();
   }
 
-  // RN-20
-  private async prepararCuenta(correo: string, contrasena: string): Promise<{ correo: string; contrasenaHash: string }> {
-    const correoNormalizado = correo.trim().toLowerCase();
-    const existente = await this.repo.buscarUsuarioPorCorreo(correoNormalizado);
-    if (existente) throw new CorreoDuplicadoError(correoNormalizado);
-
-    if (contrasena.length < LONGITUD_MINIMA_CONTRASENA) {
-      throw new ContrasenaDebilError(LONGITUD_MINIMA_CONTRASENA);
-    }
-
-    return { correo: correoNormalizado, contrasenaHash: await this.hash.generar(contrasena) };
-  }
-
-  private async crearUsuario(correo: string, contrasenaHash: string, rol: Rol, personaId: number): Promise<void> {
-    await this.repo.crearUsuario({ correoInstitucional: correo, contrasenaHash, rol, personaId });
-  }
 }
