@@ -102,13 +102,12 @@ src/
 prisma/           Esquema, migraciones SQL y seed
 scripts/          Migraciones y ejecución aislada de pruebas
 tests/            Pruebas de dominio y API
-docs/             Documentación y diagramas
 ```
 
-Las migraciones son SQL versionado aplicado con db:migrate: nombre, checksum, estado y fecha en _migraciones. **No se usa Prisma Migrate ni db push**; Prisma modela y consulta los datos. Consulta [persistencia](docs/persistencia.md).
+Las migraciones son SQL versionado aplicado con db:migrate: nombre, checksum, estado y fecha en _migraciones. **No se usa Prisma Migrate ni db push**; Prisma modela y consulta los datos. Para agregar cambios, crea una carpeta nueva en prisma/migrations con su migration.sql incremental y actualiza schema.prisma. No edites migraciones ya aplicadas.
 
 .env está ignorado por Git. .env.example contiene relleno. La API no devuelve hashes ni contraseñas; el registro HTTP no imprime cuerpos ni tokens. La contraseña ficticia del antiguo demo en memoria no se usa para sembrar el servicio real.
 
 Para ECONNREFUSED verifica MySQL Server y host/puerto; para ER_ACCESS_DENIED_ERROR revisa usuario/contraseña; para ER_BAD_DB_ERROR crea la base. Si faltan migraciones, ejecuta db:migrate.
 
-Consulta [la documentación del avance](docs/README.md).
+La documentación académica y los diagramas se entregan por separado en Google Docs, conforme a la indicación del profesor. Este README conserva las instrucciones para instalar y ejecutar el servicio. Swagger continúa disponible en la ruta /docs de la API; esa ruta no requiere una carpeta docs en el repositorio.
