@@ -21,14 +21,15 @@ export type NuevoGrupo = Omit<Grupo, 'id'>;
 export type NuevaInscripcion = Omit<Inscripcion, 'id'>;
 export type NuevoPago = Omit<Pago, 'id'>;
 export type NuevoAviso = Omit<Aviso, 'id'>;
+export type NuevoPeriodo = Omit<PeriodoEscolar, 'id'>;
 
 export interface RepositorioAcademico {
-  // --- Acceso ---
+  // Acceso
   buscarUsuarioPorCorreo(correo: string): Promise<Usuario | null>;
 
   crearUsuario(datos: NuevoUsuario): Promise<Usuario>;
 
-  // --- Personas ---
+  // Personas
   buscarAlumnoPorId(id: number): Promise<Alumno | null>;
 
   buscarAlumnoPorMatricula(matricula: string): Promise<Alumno | null>;
@@ -43,12 +44,22 @@ export interface RepositorioAcademico {
 
   crearMaestro(datos: NuevoMaestro): Promise<Maestro>;
 
-  // --- Catalogo ---
+  listarAlumnos(): Promise<Alumno[]>;
+
+  listarMaestros(): Promise<Maestro[]>;
+
+  // Catalogo
+  listarCarreras(): Promise<Carrera[]>;
+
   buscarCarreraPorId(id: number): Promise<Carrera | null>;
+
+  listarPlanesDeEstudio(): Promise<PlanDeEstudios[]>;
 
   buscarPlanDeEstudiosPorId(id: number): Promise<PlanDeEstudios | null>;
 
   actualizarPlanDeEstudios(plan: PlanDeEstudios): Promise<void>;
+
+  listarMaterias(): Promise<Materia[]>;
 
   buscarMateriaPorId(id: number): Promise<Materia | null>;
 
@@ -62,16 +73,24 @@ export interface RepositorioAcademico {
 
   listarGruposDeMaestro(maestroId: number): Promise<Grupo[]>;
 
+  listarGruposDePeriodo(periodoId: number): Promise<Grupo[]>;
+
   crearGrupo(datos: NuevoGrupo): Promise<Grupo>;
 
-  // --- Periodos ---
+  // Periodos
+  listarPeriodos(): Promise<PeriodoEscolar[]>;
+
   buscarPeriodoPorId(id: number): Promise<PeriodoEscolar | null>;
+
+  buscarPeriodoPorClave(clave: string): Promise<PeriodoEscolar | null>;
+
+  crearPeriodo(datos: NuevoPeriodo): Promise<PeriodoEscolar>;
 
   buscarPeriodoConCargaAbierta(): Promise<PeriodoEscolar | null>;
 
   actualizarPeriodo(periodo: PeriodoEscolar): Promise<void>;
 
-  // --- Inscripciones ---
+  // Inscripciones
   buscarInscripcionPorId(id: number): Promise<Inscripcion | null>;
 
   contarInscripcionesActivasDeGrupo(grupoId: number): Promise<number>;
@@ -84,7 +103,7 @@ export interface RepositorioAcademico {
 
   actualizarInscripcion(inscripcion: Inscripcion): Promise<void>;
 
-  // --- Pagos ---
+  // Pagos
   buscarPagoPorId(id: number): Promise<Pago | null>;
 
   listarPagosDeAlumno(alumnoId: number): Promise<Pago[]>;
@@ -93,7 +112,7 @@ export interface RepositorioAcademico {
 
   actualizarPago(pago: Pago): Promise<void>;
 
-  // --- Avisos ---
+  // Avisos
   listarAvisosDePeriodo(periodoId: number): Promise<Aviso[]>;
 
   crearAviso(datos: NuevoAviso): Promise<Aviso>;

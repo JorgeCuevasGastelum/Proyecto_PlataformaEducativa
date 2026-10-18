@@ -19,6 +19,7 @@ import {
   PeriodoNoEncontradoError,
 } from './errores.js';
 import type { RepositorioAcademico } from './repositorio-academico.js';
+import { alumnosInscritosEnGrupo } from './consultas.js';
 import { cargaEstaAbierta, exigirRol } from './reglas.js';
 
 export class ServicioMaestro {
@@ -46,20 +47,7 @@ export class ServicioMaestro {
   async consultarListaDeGrupo(sesion: Sesion, grupoId: number): Promise<AlumnoEnLista[]> {
     const maestro = await this.obtenerMaestro(sesion);
     const grupo = await this.obtenerGrupoPropio(maestro, grupoId);
-
-    const lista: AlumnoEnLista[] = [];
-    for (const inscripcion of await this.repo.listarInscripcionesDeGrupo(grupo.id)) {
-      if (inscripcion.estadoActual !== 'activa') continue;
-      const alumno = await this.repo.buscarAlumnoPorId(inscripcion.alumnoId);
-      if (!alumno) continue;
-      lista.push({
-        inscripcionId: inscripcion.id,
-        matricula: alumno.matricula,
-        nombre: alumno.nombre,
-        calificacion: inscripcion.calificacion,
-      });
-    }
-    return lista;
+    return alumnosInscritosEnGrupo(this.repo, grupo.id);
   }
 
   // Se validan todas las calificaciones antes de guardar cualquiera, para no dejar una captura a medias.

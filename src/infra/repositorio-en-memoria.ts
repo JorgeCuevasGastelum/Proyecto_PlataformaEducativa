@@ -21,12 +21,13 @@ import type {
   NuevoGrupo,
   NuevoMaestro,
   NuevoPago,
+  NuevoPeriodo,
   NuevoUsuario,
   RepositorioAcademico,
 } from '../dominio/repositorio-academico.js';
 import { generarHashSincrono } from './hash-scrypt.js';
 
-// Contraseña de todas las cuentas de prueba sembradas abajo.
+// Contraseña de todas las cuentas de prueba.
 export const CONTRASENA_DE_PRUEBA = 'Potros2026';
 
 function diasDesdeHoy(dias: number): Date {
@@ -81,7 +82,7 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     { id: 7, clave: 'ESTA', nombre: 'Estadistica', descripcion: 'Probabilidad y estadistica', creditos: 5, prerrequisitoIds: [] },
   ];
 
-  // Ingles I (6) esta en los dos planes: es una materia comun entre carreras.
+  // Inglés I (6) está en los dos planes: es una materia común entre carreras.
   private planes: PlanDeEstudios[] = [
     { id: 1, clave: 'ISW-2020', carreraId: 1, materiaIds: [1, 2, 3, 4, 5, 6] },
     { id: 2, clave: 'IIS-2020', carreraId: 2, materiaIds: [6, 7] },
@@ -153,7 +154,7 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     { id: 5, alumnoId: 2, grupoId: 6, fechaRegistro: new Date(), estadoActual: 'activa', calificacion: null },
   ];
 
-  // Todos tienen pagada la inscripcion del 2026-2 excepto Mario.
+  // Todos tienen pagada la inscripción del 2026-2 excepto Mario.
   private pagos: Pago[] = [
     this.pagoDeInscripcion(1, 1, 'pagado'),
     this.pagoDeInscripcion(2, 2, 'pagado'),
@@ -164,7 +165,7 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
 
   private avisos: Aviso[] = [];
 
-  // --- Acceso ---
+  // ACCESO
 
   async buscarUsuarioPorCorreo(correo: string): Promise<Usuario | null> {
     return this.usuarios.find((u) => u.correoInstitucional === correo) ?? null;
@@ -176,7 +177,7 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return nuevo;
   }
 
-  // --- Personas ---
+  // PERSONAS
 
   async buscarAlumnoPorId(id: number): Promise<Alumno | null> {
     return this.alumnos.find((a) => a.id === id) ?? null;
@@ -210,10 +211,26 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return nuevo;
   }
 
-  // --- Catalogo ---
+  async listarAlumnos(): Promise<Alumno[]> {
+    return this.alumnos;
+  }
+
+  async listarMaestros(): Promise<Maestro[]> {
+    return this.maestros;
+  }
+
+  // CATÁLOGO
+
+  async listarCarreras(): Promise<Carrera[]> {
+    return this.carreras;
+  }
 
   async buscarCarreraPorId(id: number): Promise<Carrera | null> {
     return this.carreras.find((c) => c.id === id) ?? null;
+  }
+
+  async listarPlanesDeEstudio(): Promise<PlanDeEstudios[]> {
+    return this.planes;
   }
 
   async buscarPlanDeEstudiosPorId(id: number): Promise<PlanDeEstudios | null> {
@@ -223,6 +240,10 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
   async actualizarPlanDeEstudios(plan: PlanDeEstudios): Promise<void> {
     const indice = this.planes.findIndex((p) => p.id === plan.id);
     if (indice !== -1) this.planes[indice] = plan;
+  }
+
+  async listarMaterias(): Promise<Materia[]> {
+    return this.materias;
   }
 
   async buscarMateriaPorId(id: number): Promise<Materia | null> {
@@ -251,16 +272,34 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return this.grupos.filter((g) => g.maestroId === maestroId);
   }
 
+  async listarGruposDePeriodo(periodoId: number): Promise<Grupo[]> {
+    return this.grupos.filter((g) => g.periodoId === periodoId);
+  }
+
   async crearGrupo(datos: NuevoGrupo): Promise<Grupo> {
     const nuevo: Grupo = { id: siguienteId(this.grupos), ...datos };
     this.grupos.push(nuevo);
     return nuevo;
   }
 
-  // --- Periodos ---
+  // PERIODOS
+
+  async listarPeriodos(): Promise<PeriodoEscolar[]> {
+    return this.periodos;
+  }
 
   async buscarPeriodoPorId(id: number): Promise<PeriodoEscolar | null> {
     return this.periodos.find((p) => p.id === id) ?? null;
+  }
+
+  async buscarPeriodoPorClave(clave: string): Promise<PeriodoEscolar | null> {
+    return this.periodos.find((p) => p.clave === clave) ?? null;
+  }
+
+  async crearPeriodo(datos: NuevoPeriodo): Promise<PeriodoEscolar> {
+    const nuevo: PeriodoEscolar = { id: siguienteId(this.periodos), ...datos };
+    this.periodos.push(nuevo);
+    return nuevo;
   }
 
   async buscarPeriodoConCargaAbierta(): Promise<PeriodoEscolar | null> {
@@ -272,7 +311,7 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     if (indice !== -1) this.periodos[indice] = periodo;
   }
 
-  // --- Inscripciones ---
+  // INSCRIPCIONES
 
   async buscarInscripcionPorId(id: number): Promise<Inscripcion | null> {
     return this.inscripciones.find((i) => i.id === id) ?? null;
@@ -301,7 +340,7 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     if (indice !== -1) this.inscripciones[indice] = inscripcion;
   }
 
-  // --- Pagos ---
+  // PAGOS
 
   async buscarPagoPorId(id: number): Promise<Pago | null> {
     return this.pagos.find((p) => p.id === id) ?? null;
@@ -322,7 +361,7 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     if (indice !== -1) this.pagos[indice] = pago;
   }
 
-  // --- Avisos ---
+  // AVISOS
 
   async listarAvisosDePeriodo(periodoId: number): Promise<Aviso[]> {
     return this.avisos.filter((a) => a.periodoId === periodoId);
@@ -334,7 +373,7 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return nuevo;
   }
 
-  // --- Ayudantes para los datos de prueba ---
+  // AYUDANTES PARA DATOS DE PRUEBA
 
   private usuario(id: number, correo: string, rol: Usuario['rol'], personaId: number): Usuario {
     return { id, correoInstitucional: correo, contrasenaHash: generarHashSincrono(CONTRASENA_DE_PRUEBA), rol, personaId };

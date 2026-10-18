@@ -203,6 +203,20 @@ export interface AlumnoEnLista {
   calificacion: number | null;
 }
 
+export interface GrupoDeCatalogo {
+  grupoId: number;
+  grupoClave: string;
+  materiaId: number;
+  materiaClave: string;
+  materiaNombre: string;
+  creditos: number;
+  maestroNombre: string;
+  periodoClave: string;
+  cupoMaximo: number;
+  disponibles: number;
+  horario: BloqueHorario[];
+}
+
 export interface CapturaDeCalificacion {
   inscripcionId: number;
   calificacion: number;

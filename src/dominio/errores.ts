@@ -6,7 +6,7 @@ export class ErrorDeDominio extends Error {
   }
 }
 
-// --- Acceso ---
+// Acceso
 
 export class CredencialesInvalidasError extends ErrorDeDominio {
   constructor() {
@@ -32,7 +32,7 @@ export class CorreoDuplicadoError extends ErrorDeDominio {
   }
 }
 
-// --- Personas ---
+// Personas
 
 export class AlumnoInvalidoError extends ErrorDeDominio {
   constructor(motivo: string) {
@@ -70,7 +70,7 @@ export class MaestroNoEncontradoError extends ErrorDeDominio {
   }
 }
 
-// --- Catálogo: materias, planes y grupos ---
+// Catálogo
 
 export class MateriaInvalidaError extends ErrorDeDominio {
   constructor(motivo: string) {
@@ -132,7 +132,7 @@ export class RangoHorarioInvalidoError extends ErrorDeDominio {
   }
 }
 
-// --- Periodos ---
+// Periodos
 
 export class PeriodoDeCargaCerradoError extends ErrorDeDominio {
   constructor() {
@@ -152,13 +152,25 @@ export class YaExistePeriodoAbiertoError extends ErrorDeDominio {
   }
 }
 
+export class PeriodoInvalidoError extends ErrorDeDominio {
+  constructor(razon: string) {
+    super(`El periodo no es válido: ${razon}.`);
+  }
+}
+
+export class ClaveDePeriodoDuplicadaError extends ErrorDeDominio {
+  constructor(clave: string) {
+    super(`Ya existe un periodo con la clave ${clave}.`);
+  }
+}
+
 export class GrupoFueraDePeriodoError extends ErrorDeDominio {
   constructor(grupo: string, periodo: string) {
     super(`El grupo ${grupo} no pertenece al periodo de carga abierto (${periodo}).`);
   }
 }
 
-// --- Carga académica ---
+// Carga académica
 
 export class CupoAgotadoError extends ErrorDeDominio {
   constructor(grupo: string) {
@@ -214,7 +226,7 @@ export class InscripcionYaCalificadaError extends ErrorDeDominio {
   }
 }
 
-// --- Calificaciones ---
+// Calificaciones
 
 export class CalificacionInvalidaError extends ErrorDeDominio {
   constructor(calificacion: number, minima: number, maxima: number) {
@@ -234,7 +246,7 @@ export class CargaAunAbiertaError extends ErrorDeDominio {
   }
 }
 
-// --- Pagos ---
+// Pagos
 
 export class PagoDeInscripcionPendienteError extends ErrorDeDominio {
   constructor(periodo: string) {
