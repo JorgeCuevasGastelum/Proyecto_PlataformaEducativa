@@ -1,58 +1,183 @@
-# Plataforma Educativa — El Dominio y la Arquitectura
+# Plataforma Educativa — El Servicio Central y la Seguridad
 
-Proyecto 4 — Portal universitario de carga académica. Por ahora el proyecto entrega solo la capa de dominio: las entidades, el repositorio (interfaz + implementación en memoria), los servicios con las reglas de negocio y los errores propios del dominio. No hay servidor, ni base de datos, ni pantallas todavía.
+Proyecto 4 — Portal universitario de carga académica. El dominio del avance 1 (entidades, reglas de negocio, servicios y errores) ahora se expone como un servicio REST hecho con NestJS, guarda la información en MySQL con Prisma y protege cada operación con inicio de sesión (JWT) y roles.
 
 ## Requisitos
 
-- Node.js (versión 18 o más reciente)
-- npm
+- Node.js 20 o más reciente, y npm
+- MySQL Server 8 instalado y corriendo (MySQL Workbench solo es el cliente, no sustituye al servidor)
+- Un usuario de MySQL que pueda crear bases de datos (por ejemplo `root`)
 
-## Instalación
+## Levantar el servicio desde cero
 
-Desde la raíz del proyecto:
+1. Instalar las dependencias:
 
-```
-npm install
-```
+   ```
+   npm install
+   ```
 
-## Cómo correr el programa de escenarios
+2. Copiar `.env.ejemplo` a `.env` y poner tus datos:
 
-```
-npm run dev
-```
+   ```
+   cp .env.ejemplo .env
+   ```
 
-Esto ejecuta `src/main.ts`, que recorre los escenarios en orden y muestra en la consola el resultado de cada uno:
+   En PowerShell: `Copy-Item .env.ejemplo .env`
 
-| Bloque | Escenarios |
-|---|---|
-| Acceso | inicio de sesión, contraseña incorrecta, alumno que intenta una operación de administrador |
-| Carga académica | carga exitosa, rechazo por seriación, captura de calificaciones (grupo ajeno, carga aún abierta, captura correcta), seriación cumplida, empalme de horario, cupo agotado |
-| Plan de estudios | materia fuera del plan, materia común entre carreras (Inglés I) |
-| Pagos | sin pago de inscripción, pago registrado, seriación con materia reprobada, adeudo vencido |
-| Horario, bajas e historial | horario ordenado por día y hora, baja, baja repetida, baja de inscripción inexistente o ajena, historial con calificaciones y sin bajas |
+   - `DATABASE_URL`: tu usuario, contraseña y puerto de MySQL. La base `plataforma_educativa` no hace falta crearla, la crea el paso 3.
+   - `JWT_SECRET`: cualquier texto de al menos 32 caracteres. Para generar uno:
+     `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+   - `ORIGENES_PERMITIDOS`: de dónde se va a llamar el servicio desde el navegador (las aplicaciones de los avances 3 y 4).
 
-Todas las cuentas de prueba usan la contraseña `Potros2026` (constante `CONTRASENA_DE_PRUEBA` en `src/infra/repositorio-en-memoria.ts`):
+   El archivo `.env` no se sube al repositorio.
 
-| Rol | Correo | Notas |
+3. Crear las tablas aplicando el historial de migraciones y generar el cliente de Prisma:
+
+   ```
+   npx prisma migrate dev
+   npx prisma generate
+   ```
+
+4. Cargar los datos de prueba:
+
+   ```
+   npm run prisma:seed
+   ```
+
+   El seed borra todo y vuelve a cargar los datos, así que se puede correr las veces que haga falta.
+
+5. Levantar el servicio:
+
+   ```
+   npm run start:dev
+   ```
+
+   El servicio queda en `http://localhost:3000` y la documentación en `http://localhost:3000/docs`.
+
+## Probar desde la documentación (Swagger)
+
+1. En `/docs`, abrir `POST /auth/login` y mandar:
+
+   ```json
+   { "correoInstitucional": "diana@admin.edu.mx", "contrasena": "Potros2026" }
+   ```
+
+2. Copiar el `access_token` de la respuesta, darle al botón **Authorize** de arriba y pegarlo.
+3. Ya se puede probar cualquier punto de entrada con ese usuario. Para cambiar de usuario, se repite con otra cuenta.
+
+Todas las cuentas de prueba usan la contraseña `Potros2026`:
+
+| Rol | Correo | Para qué sirve |
 |---|---|---|
-| Administrador | diana@admin.edu.mx | |
-| Maestro | ana@maestros.edu.mx | Programación I 01 (2026-1), Programación II, Estructuras de Datos |
+| Administrador | diana@admin.edu.mx | Todo lo de control escolar |
+| Maestro | ana@maestros.edu.mx | Programación I 01 (2026-1, sin calificar), Programación II, Estructuras de Datos |
 | Maestro | luis@maestros.edu.mx | Programación I 02 (2026-1), Bases de Datos, Redes, Inglés I, Estadística |
-| Alumno | karla@alumnos.edu.mx | ISW; cursó Programación I en 2026-1 sin calificación todavía |
-| Alumno | juan@alumnos.edu.mx | ISW; aprobó Programación I (85) y ocupa el único lugar de Estructuras de Datos |
-| Alumno | sofia@alumnos.edu.mx | ISW; aprobó Programación I (95) |
-| Alumno | pedro@alumnos.edu.mx | IIS (Ingeniería Industrial) |
-| Alumno | mario@alumnos.edu.mx | ISW; no ha pagado la inscripción del 2026-2 |
+| Alumno | karla@alumnos.edu.mx | Puede inscribir Redes (grupo 5); Programación II la rechaza por seriación |
+| Alumno | juan@alumnos.edu.mx | Aprobó Programación I y ocupa el único lugar de Estructuras de Datos (grupo 6) |
+| Alumno | sofia@alumnos.edu.mx | Aprobó Programación I; Estructuras de Datos la rechaza por cupo |
+| Alumno | pedro@alumnos.edu.mx | Ingeniería Industrial; Bases de Datos la rechaza por no estar en su plan |
+| Alumno | mario@alumnos.edu.mx | No ha pagado la inscripción del 2026-2; cualquier inscripción se rechaza |
 
-## Otros comandos
+El período 2026-1 ya está cerrado y el 2026-2 tiene la carga abierta durante 30 días a partir de que se corre el seed.
 
-Revisar que el código compile sin errores de tipos:
+## Roles y qué puede hacer cada uno
+
+- **Administrador** (control escolar): registra alumnos, maestros y materias, arma los planes de estudio, crea períodos y abre o cierra la carga, abre grupos, consulta la ocupación y los alumnos inscritos de cada grupo, registra cargos y pagos, y publica avisos. Las cuentas de alumnos y maestros solo las crea el administrador.
+- **Alumno**: consulta los grupos disponibles, se inscribe y se da de baja, y consulta sus materias inscritas, su horario, su historial y su estado de cuenta.
+- **Maestro**: consulta sus grupos, la lista de alumnos de cada uno y captura sus calificaciones.
+- **Cualquier usuario con sesión**: consulta carreras, planes, materias, períodos, grupos y avisos.
+
+Sin sesión solo se puede usar `POST /auth/login`.
+
+## Puntos de entrada
+
+| Método | Ruta | Quién | Qué hace |
+|---|---|---|---|
+| POST | /auth/login | público | Inicia sesión y regresa el token (dura 1 hora) |
+| GET | /auth/yo | con sesión | Quién soy y con qué rol |
+| POST | /alumnos | administrador | Registrar alumno y su cuenta |
+| GET | /alumnos | administrador | Listar alumnos |
+| GET | /alumnos/yo/materias | alumno | Mis materias inscritas en el período actual |
+| GET | /alumnos/yo/horario | alumno | Mi horario ordenado por día y hora |
+| GET | /alumnos/yo/historial | alumno | Mi historial con calificaciones, por período |
+| GET | /alumnos/yo/pagos | alumno | Mi estado de cuenta |
+| POST | /maestros | administrador | Registrar maestro y su cuenta |
+| GET | /maestros | administrador | Listar maestros |
+| GET | /maestros/yo/grupos | maestro | Mis grupos y cuántos inscritos tienen |
+| GET | /carreras | con sesión | Listar carreras |
+| GET | /planes | con sesión | Listar planes de estudio con sus materias |
+| PUT | /planes/:id/materias/:materiaId | administrador | Agregar una materia a un plan |
+| GET | /materias | con sesión | Listar materias con sus prerrequisitos |
+| POST | /materias | administrador | Registrar materia |
+| GET | /periodos | con sesión | Listar períodos |
+| POST | /periodos | administrador | Crear período |
+| PATCH | /periodos/:id | administrador | Abrir o cerrar la carga (`{ "cargaAbierta": true }`) |
+| GET | /grupos | con sesión | Grupos del período abierto con lugares disponibles (`?periodoId=` para otro) |
+| POST | /grupos | administrador | Abrir grupo con maestro, cupo y horario |
+| GET | /grupos/:id/ocupacion | administrador | Lugares ocupados y disponibles |
+| GET | /grupos/:id/alumnos | administrador, maestro | Alumnos inscritos (el maestro solo de sus grupos) |
+| PUT | /grupos/:id/calificaciones | maestro | Capturar calificaciones de mi grupo |
+| POST | /inscripciones | alumno | Inscribirme a un grupo (`{ "grupoId": 5 }`) |
+| DELETE | /inscripciones/:id | alumno | Darme de baja (la inscripción queda en estado baja) |
+| POST | /pagos | administrador | Registrar un cargo |
+| PATCH | /pagos/:id | administrador | Marcar un cargo como pagado (`{ "estado": "pagado" }`) |
+| GET | /avisos?periodoId= | con sesión | Avisos de un período |
+| POST | /avisos | administrador | Publicar aviso |
+
+### Respuestas
+
+Todas las respuestas tienen la misma forma. Si salió bien:
+
+```json
+{ "data": { ... }, "meta": { "ruta": "/inscripciones", "duracionMs": 10, "timestamp": "..." } }
+```
+
+Si no:
+
+```json
+{ "error": { "statusCode": 409, "tipo": "CupoAgotadoError", "mensaje": "..." }, "meta": { "ruta": "/inscripciones", "timestamp": "..." } }
+```
+
+| Código | Cuándo |
+|---|---|
+| 200 / 201 | Salió bien / se creó algo |
+| 400 | La petición viene mal formada (faltan campos, tipos equivocados, campos que no existen) |
+| 401 | No hay token, el token venció o fue alterado, o el correo y contraseña no coinciden |
+| 403 | El token es válido pero el rol no tiene permiso, o un maestro intenta usar un grupo ajeno |
+| 404 | No existe lo que se pidió |
+| 409 | Una regla de negocio impidió la operación (cupo, empalme, seriación, pagos, etc.) |
+
+Cada petición queda registrada en la consola con su código y lo que tardó.
+
+### Los tres resultados del control de acceso
+
+Con `POST /periodos` (solo administrador) y el cuerpo `{ "clave": "2027-1", "fechaAperturaCarga": "2027-01-05", "fechaCierreCarga": "2027-01-20", "creditosMaximos": 20 }`:
+
+- Sin token → **401**
+- Con el token de karla (alumna) → **403**
+- Con el token de diana (administradora) → **201**
+
+## Cambiar entre MySQL y memoria
+
+La implementación del repositorio se elige en un solo lugar, `src/academico/academico.module.ts`:
+
+```ts
+{ provide: REPOSITORIO_ACADEMICO, useClass: RepositorioPrisma },
+```
+
+Si se cambia `RepositorioPrisma` por `RepositorioEnMemoria`, el servicio funciona igual sin MySQL. Los servicios del dominio y los controllers no cambian, porque solo conocen la interfaz `RepositorioAcademico`.
+
+## Programa de escenarios del avance 1
+
+El programa del avance 1 sigue funcionando sin base de datos:
 
 ```
-npm run typecheck
+npm run escenarios
 ```
 
-## Modelo del dominio
+Recorre 23 escenarios (acceso, carga académica, plan de estudios, pagos, horario, bajas e historial) usando el repositorio en memoria.
+
+## Modelo de datos
 
 - **Usuario**: la cuenta para iniciar sesión (correo, hash de la contraseña y **rol**: alumno, maestro o administrador). Apunta a la persona que representa.
 - **Alumno, Maestro, Administrador**: los datos de cada persona. El alumno pertenece a un **plan de estudios**.
@@ -64,9 +189,18 @@ npm run typecheck
 - **Pago**: los cargos del alumno por período (inscripción o colegiatura) y su estado (pendiente o pagado).
 - **Aviso**: avisos publicados por período.
 
+El esquema está en `prisma/schema.prisma` y el historial de cambios de la base en `prisma/migrations/`:
+
+| Migración | Qué agrega |
+|---|---|
+| catalogo | carreras, planes de estudio, materias, materias por plan, prerrequisitos y períodos |
+| personas_y_grupos | alumnos, maestros, administradores, grupos y bloques de horario |
+| inscripciones_pagos_y_avisos | inscripciones, pagos y avisos |
+| usuarios | cuentas de usuario con su rol |
+
 ## Reglas de negocio
 
-Las reglas RN-01 a RN-13 son las del documento del Avance 1. Las marcadas como *(ajustada)* cambiaron con el nuevo modelo, y de la RN-14 en adelante son nuevas. En el código, cada validación lleva un comentario con su número de regla.
+Las reglas RN-01 a RN-13 son las del documento del avance 1; las marcadas como *(ajustada)* cambiaron con el nuevo modelo, y de la RN-14 en adelante son nuevas. En el código, cada validación lleva un comentario con su número de regla. Todas las que impiden algo responden **409**.
 
 | Regla | Descripción | Errores |
 |---|---|---|
@@ -96,8 +230,9 @@ Las reglas RN-01 a RN-13 son las del documento del Avance 1. Las marcadas como *
 | RN-24 | No se puede abrir un grupo sin materia, período o maestro existentes, sin clave, con cupo de cero o menos, sin bloques de horario, o con una clave ya usada para esa materia y período. | `GrupoInvalidoError`, `GrupoDuplicadoError`, `MateriaNoEncontradaError`, `PeriodoNoEncontradoError`, `MaestroNoEncontradoError` |
 | RN-25 | Un maestro no puede tener dos grupos a la misma hora en un período. | `EmpalmeDeMaestroError` |
 | RN-26 | Un cargo debe tener monto mayor a cero, y un pago no se puede registrar dos veces. | `PagoInvalidoError`, `PagoYaRegistradoError`, `PagoNoEncontradoError` |
+| RN-27 | No se puede crear un período sin clave, con tope de créditos de cero o menos, con la fecha de cierre antes de la de apertura, o con una clave ya usada. El período nace con la carga cerrada. | `PeriodoInvalidoError`, `ClaveDePeriodoDuplicadaError` |
 
-## Cambios respecto al avance anterior (retroalimentación)
+## Cambios respecto al avance 1 (retroalimentación)
 
 | Comentario | Qué se hizo |
 |---|---|
@@ -112,22 +247,27 @@ Las reglas RN-01 a RN-13 son las del documento del Avance 1. Las marcadas como *
 | El horario no se ordenaba por día | `DiaSemana` es un tipo cerrado y el horario se ordena por día y después por hora (`compararPorDiaYHora`). |
 | El historial incluía las bajas | El historial solo muestra inscripciones activas, con su calificación y si se aprobó. |
 
+En este avance también se completaron casos de uso que faltaban: crear períodos escolares (RN-27), que el administrador vea los alumnos inscritos en cada grupo, y que el alumno vea los grupos disponibles con sus lugares antes de inscribirse (`ServicioCatalogo`).
+
 ## Estructura del proyecto
 
 ```
+prisma/
+  schema.prisma                 # modelo de datos
+  migrations/                   # historial de cambios de la base
+  seed.ts                       # datos de prueba
 src/
-  dominio/
-    entidades.ts                # entidades, tipos y constantes del dominio
-    errores.ts                  # errores propios del dominio (heredan de ErrorDeDominio)
-    reglas.ts                   # funciones puras compartidas: rol, empalme, aprobación, orden del horario, pagos vencidos
-    repositorio-academico.ts    # la interfaz del contrato de acceso a datos
-    generador-de-hash.ts        # la interfaz para generar y comparar hashes de contraseñas
-    servicio-autenticacion.ts   # inicio de sesión
-    servicio-alumno.ts          # carga académica, bajas, horario, historial, estado de cuenta
-    servicio-maestro.ts         # grupos del maestro, lista de alumnos y captura de calificaciones
-    servicio-administracion.ts  # alumnos, maestros, materias, planes, grupos, períodos, avisos y pagos
+  dominio/                      # el dominio del avance 1: entidades, reglas, servicios y errores
   infra/
-    repositorio-en-memoria.ts   # implementación en memoria del repositorio, con datos de prueba
-    hash-scrypt.ts              # implementación del hash con scrypt (node:crypto)
-  main.ts                       # el programa que corre los escenarios
+    repositorio-en-memoria.ts   # implementación en memoria (avance 1)
+    repositorio-prisma.ts       # implementación con MySQL, mismo contrato
+    hash-scrypt.ts              # hash de contraseñas
+  prisma/                       # PrismaService
+  academico/                    # aquí se elige la implementación del repositorio
+  auth/                         # inicio de sesión, JWT, guards y decoradores
+  alumnos/ maestros/ materias/ planes/ periodos/
+  grupos/ inscripciones/ pagos/ avisos/   # un controller y sus DTO por recurso
+  comun/                        # filtros de errores, formato de respuesta y registro de peticiones
+  main.ts                       # arranque del servicio
+  escenarios.ts                 # programa de escenarios del avance 1
 ```

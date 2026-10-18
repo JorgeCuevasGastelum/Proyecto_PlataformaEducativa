@@ -1,6 +1,7 @@
 import { LONGITUD_MINIMA_CONTRASENA } from './entidades.js';
 import type {
   Alumno,
+  AlumnoEnLista,
   Aviso,
   BloqueHorario,
   ConceptoDePago,
@@ -17,6 +18,7 @@ import {
   AlumnoInvalidoError,
   AlumnoNoEncontradoError,
   ClaveDeMateriaDuplicadaError,
+  ClaveDePeriodoDuplicadaError,
   ContrasenaDebilError,
   CorreoDuplicadoError,
   EmpalmeDeMaestroError,
@@ -33,12 +35,14 @@ import {
   PagoInvalidoError,
   PagoNoEncontradoError,
   PagoYaRegistradoError,
+  PeriodoInvalidoError,
   PeriodoNoEncontradoError,
   PlanDeEstudiosNoEncontradoError,
   YaExistePeriodoAbiertoError,
 } from './errores.js';
 import type { GeneradorDeHash } from './generador-de-hash.js';
 import type { RepositorioAcademico } from './repositorio-academico.js';
+import { alumnosInscritosEnGrupo } from './consultas.js';
 import { exigirRol, horariosSeEmpalman } from './reglas.js';
 
 interface DatosNuevaMateria {
@@ -73,6 +77,13 @@ interface DatosNuevoMaestro {
   contrasena: string;
 }
 
+interface DatosNuevoPeriodo {
+  clave: string;
+  fechaAperturaCarga: Date;
+  fechaCierreCarga: Date;
+  creditosMaximos: number;
+}
+
 interface DatosNuevoCargo {
   alumnoId: number;
   periodoId: number;
@@ -87,7 +98,7 @@ export class ServicioAdministracion {
     private readonly hash: GeneradorDeHash,
   ) {}
 
-  // --- Personas y cuentas ---
+  // PERSONAS Y CUENTSA
 
   // RN-12
   async registrarAlumno(sesion: Sesion, datos: DatosNuevoAlumno): Promise<Alumno> {
@@ -132,7 +143,17 @@ export class ServicioAdministracion {
     return maestro;
   }
 
-  // --- Catalogo: materias, planes y grupos ---
+  async listarAlumnos(sesion: Sesion): Promise<Alumno[]> {
+    await this.verificarAdministrador(sesion);
+    return this.repo.listarAlumnos();
+  }
+
+  async listarMaestros(sesion: Sesion): Promise<Maestro[]> {
+    await this.verificarAdministrador(sesion);
+    return this.repo.listarMaestros();
+  }
+
+  // CATÁLOGO
 
   // RN-06
   async registrarMateria(sesion: Sesion, datos: DatosNuevaMateria): Promise<Materia> {
@@ -218,7 +239,33 @@ export class ServicioAdministracion {
     return { ocupados, disponibles: grupo.cupoMaximo - ocupados };
   }
 
-  // --- Periodos ---
+  async consultarInscritosDeGrupo(sesion: Sesion, grupoId: number): Promise<AlumnoEnLista[]> {
+    await this.verificarAdministrador(sesion);
+
+    const grupo = await this.repo.buscarGrupoPorId(grupoId);
+    if (!grupo) throw new GrupoNoEncontradoError(String(grupoId));
+
+    return alumnosInscritosEnGrupo(this.repo, grupo.id);
+  }
+
+  // PERIODOS
+
+  // RN-27
+  async crearPeriodo(sesion: Sesion, datos: DatosNuevoPeriodo): Promise<PeriodoEscolar> {
+    await this.verificarAdministrador(sesion);
+
+    if (!datos.clave || datos.creditosMaximos <= 0) {
+      throw new PeriodoInvalidoError('debe tener clave y un tope de creditos mayor a cero');
+    }
+    if (datos.fechaCierreCarga <= datos.fechaAperturaCarga) {
+      throw new PeriodoInvalidoError('la fecha de cierre debe ser despues de la de apertura');
+    }
+
+    const existente = await this.repo.buscarPeriodoPorClave(datos.clave);
+    if (existente) throw new ClaveDePeriodoDuplicadaError(datos.clave);
+
+    return this.repo.crearPeriodo({ ...datos, habilitado: false });
+  }
 
   // RN-07
   async abrirCargaAcademica(sesion: Sesion, periodoId: number): Promise<PeriodoEscolar> {
@@ -257,7 +304,7 @@ export class ServicioAdministracion {
     return this.repo.crearAviso({ titulo, contenido, periodoId, fechaPublicacion: new Date() });
   }
 
-  // --- Pagos ---
+  // PAGOS
 
   // RN-26
   async registrarCargo(sesion: Sesion, datos: DatosNuevoCargo): Promise<Pago> {

@@ -1,0 +1,221 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generado/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Rol {
+  alumno
+  maestro
+  administrador
+}
+
+model Usuario {
+  id                  Int            @id @default(autoincrement())
+  correoInstitucional String         @unique @db.VarChar(120)
+  contrasenaHash      String         @db.VarChar(255)
+  rol                 Rol
+  alumnoId            Int?           @unique
+  maestroId           Int?           @unique
+  administradorId     Int?           @unique
+  alumno              Alumno?        @relation(fields: [alumnoId], references: [id])
+  maestro             Maestro?       @relation(fields: [maestroId], references: [id])
+  administrador       Administrador? @relation(fields: [administradorId], references: [id])
+
+  @@map("usuarios")
+}
+
+model Carrera {
+  id     Int              @id @default(autoincrement())
+  clave  String           @unique @db.VarChar(20)
+  nombre String           @db.VarChar(120)
+  planes PlanDeEstudios[]
+
+  @@map("carreras")
+}
+
+model PlanDeEstudios {
+  id        Int             @id @default(autoincrement())
+  clave     String          @unique @db.VarChar(20)
+  carreraId Int
+  carrera   Carrera         @relation(fields: [carreraId], references: [id])
+  materias  MateriaEnPlan[]
+  alumnos   Alumno[]
+
+  @@map("planes_de_estudio")
+}
+
+model Materia {
+  id             Int             @id @default(autoincrement())
+  clave          String          @unique @db.VarChar(20)
+  nombre         String          @db.VarChar(120)
+  descripcion    String          @db.VarChar(255)
+  creditos       Int
+  planes         MateriaEnPlan[]
+  grupos         Grupo[]
+  prerrequisitos Prerrequisito[] @relation("MateriaSeriada")
+  esRequisitoDe  Prerrequisito[] @relation("MateriaRequerida")
+
+  @@map("materias")
+}
+
+model MateriaEnPlan {
+  planId    Int
+  materiaId Int
+  plan      PlanDeEstudios @relation(fields: [planId], references: [id])
+  materia   Materia        @relation(fields: [materiaId], references: [id])
+
+  @@id([planId, materiaId])
+  @@map("materias_en_plan")
+}
+
+model Prerrequisito {
+  materiaId       Int
+  prerrequisitoId Int
+  materia         Materia @relation("MateriaSeriada", fields: [materiaId], references: [id])
+  prerrequisito   Materia @relation("MateriaRequerida", fields: [prerrequisitoId], references: [id])
+
+  @@id([materiaId, prerrequisitoId])
+  @@map("prerrequisitos")
+}
+
+model PeriodoEscolar {
+  id                 Int      @id @default(autoincrement())
+  clave              String   @unique @db.VarChar(20)
+  fechaAperturaCarga DateTime
+  fechaCierreCarga   DateTime
+  creditosMaximos    Int
+  habilitado         Boolean  @default(false)
+  grupos             Grupo[]
+  pagos              Pago[]
+  avisos             Aviso[]
+
+  @@map("periodos")
+}
+
+model Alumno {
+  id               Int            @id @default(autoincrement())
+  matricula        String         @unique @db.VarChar(20)
+  nombre           String         @db.VarChar(120)
+  planDeEstudiosId Int
+  planDeEstudios   PlanDeEstudios @relation(fields: [planDeEstudiosId], references: [id])
+  inscripciones    Inscripcion[]
+  pagos            Pago[]
+  usuario          Usuario?
+
+  @@map("alumnos")
+}
+
+model Maestro {
+  id             Int     @id @default(autoincrement())
+  numeroEmpleado String  @unique @db.VarChar(20)
+  nombre         String   @db.VarChar(120)
+  grupos         Grupo[]
+  usuario        Usuario?
+
+  @@map("maestros")
+}
+
+model Administrador {
+  id      Int      @id @default(autoincrement())
+  nombre  String   @db.VarChar(120)
+  usuario Usuario?
+
+  @@map("administradores")
+}
+
+enum DiaSemana {
+  lunes
+  martes
+  miercoles
+  jueves
+  viernes
+  sabado
+}
+
+model Grupo {
+  id         Int             @id @default(autoincrement())
+  materiaId  Int
+  periodoId  Int
+  clave      String          @db.VarChar(10)
+  maestroId  Int
+  cupoMaximo Int
+  materia    Materia         @relation(fields: [materiaId], references: [id])
+  periodo    PeriodoEscolar  @relation(fields: [periodoId], references: [id])
+  maestro       Maestro         @relation(fields: [maestroId], references: [id])
+  horario       BloqueHorario[]
+  inscripciones Inscripcion[]
+
+  // RN-24: no se repite la clave del grupo para la misma materia y periodo.
+  @@unique([materiaId, periodoId, clave])
+  @@map("grupos")
+}
+
+model BloqueHorario {
+  id           Int       @id @default(autoincrement())
+  grupoId      Int
+  diaSemana    DiaSemana
+  minutoInicio Int
+  minutoFin    Int
+  grupo        Grupo     @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  @@map("bloques_horario")
+}
+
+enum EstadoInscripcion {
+  activa
+  baja
+}
+
+model Inscripcion {
+  id            Int               @id @default(autoincrement())
+  alumnoId      Int
+  grupoId       Int
+  fechaRegistro DateTime          @default(now())
+  estadoActual  EstadoInscripcion @default(activa)
+  calificacion  Int?
+  alumno        Alumno            @relation(fields: [alumnoId], references: [id])
+  grupo         Grupo             @relation(fields: [grupoId], references: [id])
+
+  @@map("inscripciones")
+}
+
+enum ConceptoDePago {
+  inscripcion
+  colegiatura
+}
+
+enum EstadoDePago {
+  pendiente
+  pagado
+}
+
+model Pago {
+  id          Int            @id @default(autoincrement())
+  alumnoId    Int
+  periodoId   Int
+  concepto    ConceptoDePago
+  monto       Decimal        @db.Decimal(10, 2)
+  fechaLimite DateTime
+  estado      EstadoDePago   @default(pendiente)
+  fechaPago   DateTime?
+  alumno      Alumno         @relation(fields: [alumnoId], references: [id])
+  periodo     PeriodoEscolar @relation(fields: [periodoId], references: [id])
+
+  @@map("pagos")
+}
+
+model Aviso {
+  id               Int            @id @default(autoincrement())
+  titulo           String         @db.VarChar(120)
+  contenido        String         @db.Text
+  periodoId        Int
+  fechaPublicacion DateTime       @default(now())
+  periodo          PeriodoEscolar @relation(fields: [periodoId], references: [id])
+
+  @@map("avisos")
+}
