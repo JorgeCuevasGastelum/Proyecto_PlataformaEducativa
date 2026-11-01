@@ -28,6 +28,8 @@ import {
   MateriaYaAprobadaError,
   MateriaYaInscritaError,
   PagoDeInscripcionPendienteError,
+  PagoNoEncontradoError,
+  PagoYaRegistradoError,
   PeriodoDeCargaCerradoError,
   PlanDeEstudiosNoEncontradoError,
   SeriacionNoCumplidaError,
@@ -205,6 +207,18 @@ export class ServicioAlumno {
   async consultarEstadoDeCuenta(sesion: Sesion): Promise<Pago[]> {
     const alumno = await this.obtenerAlumno(sesion);
     return this.repo.listarPagosDeAlumno(alumno.id);
+  }
+
+  async pagarCargo(sesion: Sesion, pagoId: number): Promise<Pago> {
+    const alumno = await this.obtenerAlumno(sesion);
+
+    const pago = await this.repo.buscarPagoPorId(pagoId);
+    if (!pago || pago.alumnoId !== alumno.id) throw new PagoNoEncontradoError(String(pagoId));
+    if (pago.estado === 'pagado') throw new PagoYaRegistradoError(String(pagoId));
+
+    const actualizado: Pago = { ...pago, estado: 'pagado', fechaPago: new Date() };
+    await this.repo.actualizarPago(actualizado);
+    return actualizado;
   }
 
   async consultarAvisos(periodoId: number): Promise<Aviso[]> {

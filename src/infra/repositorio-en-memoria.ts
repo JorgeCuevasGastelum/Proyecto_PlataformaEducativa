@@ -22,6 +22,7 @@ import type {
   NuevoMaestro,
   NuevoPago,
   NuevoPeriodo,
+  NuevoPlanDeEstudios,
   NuevoUsuario,
   RepositorioAcademico,
 } from '../dominio/repositorio-academico.js';
@@ -237,6 +238,16 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return this.planes.find((p) => p.id === id) ?? null;
   }
 
+  async buscarPlanDeEstudiosPorClave(clave: string): Promise<PlanDeEstudios | null> {
+    return this.planes.find((p) => p.clave === clave) ?? null;
+  }
+
+  async crearPlanDeEstudios(datos: NuevoPlanDeEstudios): Promise<PlanDeEstudios> {
+    const nuevo: PlanDeEstudios = { id: siguienteId(this.planes), ...datos };
+    this.planes.push(nuevo);
+    return nuevo;
+  }
+
   async actualizarPlanDeEstudios(plan: PlanDeEstudios): Promise<void> {
     const indice = this.planes.findIndex((p) => p.id === plan.id);
     if (indice !== -1) this.planes[indice] = plan;
@@ -260,6 +271,11 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return nueva;
   }
 
+  async actualizarMateria(materia: Materia): Promise<void> {
+    const indice = this.materias.findIndex((m) => m.id === materia.id);
+    if (indice !== -1) this.materias[indice] = materia;
+  }
+
   async buscarGrupoPorId(id: number): Promise<Grupo | null> {
     return this.grupos.find((g) => g.id === id) ?? null;
   }
@@ -280,6 +296,11 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     const nuevo: Grupo = { id: siguienteId(this.grupos), ...datos };
     this.grupos.push(nuevo);
     return nuevo;
+  }
+
+  async actualizarGrupo(grupo: Grupo): Promise<void> {
+    const indice = this.grupos.findIndex((g) => g.id === grupo.id);
+    if (indice !== -1) this.grupos[indice] = grupo;
   }
 
   // PERIODOS

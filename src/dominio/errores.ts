@@ -277,3 +277,21 @@ export class PagoInvalidoError extends ErrorDeDominio {
     super(`Cargo no válido: ${motivo}`);
   }
 }
+
+export class CarreraNoEncontradaError extends ErrorDeDominio {
+  constructor(carreraId: string) {
+    super(`No existe la carrera ${carreraId}.`);
+  }
+}
+
+export class ClaveDePlanDuplicadaError extends ErrorDeDominio {
+  constructor(clave: string) {
+    super(`Ya existe un plan de estudios con la clave ${clave}.`);
+  }
+}
+
+export class CupoMenorAInscritosError extends ErrorDeDominio {
+  constructor(grupo: string, cupo: number, inscritos: number) {
+    super(`El grupo ${grupo} ya tiene ${inscritos} inscritos y no puede quedar con un cupo de ${cupo}.`);
+  }
+}

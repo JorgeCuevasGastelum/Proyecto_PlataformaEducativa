@@ -14,6 +14,7 @@ import type {
 } from './entidades.js';
 
 export type NuevoUsuario = Omit<Usuario, 'id'>;
+export type NuevoPlanDeEstudios = Omit<PlanDeEstudios, 'id'>;
 export type NuevoAlumno = Omit<Alumno, 'id'>;
 export type NuevoMaestro = Omit<Maestro, 'id'>;
 export type NuevaMateria = Omit<Materia, 'id'>;
@@ -57,6 +58,10 @@ export interface RepositorioAcademico {
 
   buscarPlanDeEstudiosPorId(id: number): Promise<PlanDeEstudios | null>;
 
+  buscarPlanDeEstudiosPorClave(clave: string): Promise<PlanDeEstudios | null>;
+
+  crearPlanDeEstudios(datos: NuevoPlanDeEstudios): Promise<PlanDeEstudios>;
+
   actualizarPlanDeEstudios(plan: PlanDeEstudios): Promise<void>;
 
   listarMaterias(): Promise<Materia[]>;
@@ -67,6 +72,8 @@ export interface RepositorioAcademico {
 
   crearMateria(datos: NuevaMateria): Promise<Materia>;
 
+  actualizarMateria(materia: Materia): Promise<void>;
+
   buscarGrupoPorId(id: number): Promise<Grupo | null>;
 
   listarGruposDeMateriaEnPeriodo(materiaId: number, periodoId: number): Promise<Grupo[]>;
@@ -76,6 +83,8 @@ export interface RepositorioAcademico {
   listarGruposDePeriodo(periodoId: number): Promise<Grupo[]>;
 
   crearGrupo(datos: NuevoGrupo): Promise<Grupo>;
+
+  actualizarGrupo(grupo: Grupo): Promise<void>;
 
   // Periodos
   listarPeriodos(): Promise<PeriodoEscolar[]>;
