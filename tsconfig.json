@@ -17,6 +17,8 @@
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": false,
+        "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "exclude": ["node_modules", "dist", "portal"]
 }
