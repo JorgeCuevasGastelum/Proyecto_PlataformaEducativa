@@ -102,6 +102,7 @@ Sin sesión solo se puede usar `POST /auth/login`.
 | GET | /auth/yo | con sesión | Quién soy y con qué rol |
 | POST | /alumnos | administrador | Registrar alumno y su cuenta |
 | GET | /alumnos | administrador | Listar alumnos |
+| GET | /alumnos/yo/plan | alumno | Mi plan de estudios con las materias que lo forman |
 | GET | /alumnos/yo/materias | alumno | Mis materias inscritas en el período actual |
 | GET | /alumnos/yo/horario | alumno | Mi horario ordenado por día y hora |
 | GET | /alumnos/yo/historial | alumno | Mi historial con calificaciones, por período |

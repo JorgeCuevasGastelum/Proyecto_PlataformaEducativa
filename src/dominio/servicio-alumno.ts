@@ -9,6 +9,7 @@ import type {
   MateriaInscrita,
   Pago,
   PeriodoEscolar,
+  PlanDeEstudios,
   RenglonDeHorario,
   Sesion,
 } from './entidades.js';
@@ -137,6 +138,13 @@ export class ServicioAlumno {
     const actualizada: Inscripcion = { ...inscripcion, estadoActual: 'baja' };
     await this.repo.actualizarInscripcion(actualizada);
     return actualizada;
+  }
+
+  async consultarPlanDeEstudios(sesion: Sesion): Promise<PlanDeEstudios> {
+    const alumno = await this.obtenerAlumno(sesion);
+    const plan = await this.repo.buscarPlanDeEstudiosPorId(alumno.planDeEstudiosId);
+    if (!plan) throw new PlanDeEstudiosNoEncontradoError(String(alumno.planDeEstudiosId));
+    return plan;
   }
 
   async consultarMateriasInscritas(sesion: Sesion): Promise<MateriaInscrita[]> {

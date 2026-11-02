@@ -29,6 +29,12 @@ export class AlumnosController {
     return this.administracion.listarAlumnos(sesion);
   }
 
+  @Get('yo/plan')
+  @Roles('alumno')
+  plan(@UsuarioActual() sesion: Sesion) {
+    return this.alumnos.consultarPlanDeEstudios(sesion);
+  }
+
   @Get('yo/materias')
   @Roles('alumno')
   materiasInscritas(@UsuarioActual() sesion: Sesion) {
