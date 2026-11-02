@@ -77,6 +77,11 @@ Todas las cuentas de prueba usan la contraseña `Potros2026`:
 | Alumno | sofia@alumnos.edu.mx | Aprobó Programación I; Estructuras de Datos la rechaza por cupo |
 | Alumno | pedro@alumnos.edu.mx | Ingeniería Industrial; Bases de Datos la rechaza por no estar en su plan |
 | Alumno | mario@alumnos.edu.mx | No ha pagado la inscripción del 2026-2; cualquier inscripción se rechaza |
+| Maestro | marta@maestros.edu.mx | Cálculo Diferencial, Matemáticas Discretas, Sistemas Operativos, Estadística 02, Inglés I 02 (2026-2) y Programación I 03 (2026-1) |
+| Alumno | lucia@alumnos.edu.mx | Carga ya hecha en 2026-2 (Programación II, Cálculo e Inglés I), historial de dos períodos y estado de cuenta con cargos pagados y pendientes |
+| Alumno | diego@alumnos.edu.mx | Tiene una colegiatura vencida; cualquier inscripción se rechaza por adeudo |
+
+El período 2026-2 tiene tres avisos y el 2026-1 ninguno, para poder ver la pantalla de avisos vacía. Karla y Lucía tienen una colegiatura pendiente que se puede pagar desde el portal; Mario puede pagar su inscripción.
 
 El período 2026-1 ya está cerrado y el 2026-2 tiene la carga abierta durante 30 días a partir de que se corre el seed.
 
