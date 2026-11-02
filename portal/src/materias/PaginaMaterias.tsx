@@ -26,6 +26,11 @@ export default function PaginaMaterias() {
 
     const abierto = periodoAbierto(periodos.periodos);
 
+    let creditos = 0;
+    for (const m of materias) {
+        creditos = creditos + m.creditos;
+    }
+
     async function baja(inscripcionId: number, nombre: string) {
         setOcupado(true);
         setAviso(null);
@@ -47,7 +52,7 @@ export default function PaginaMaterias() {
                 <h1>Mis materias</h1>
                 <p className="pagina__bajada">
                     {abierto
-                        ? `${materias.length} materia(s) en ${abierto.clave}`
+                        ? `${materias.length} materia(s) en ${abierto.clave}: ${creditos} de ${abierto.creditosMaximos} créditos`
                         : "No hay una carga académica abierta"}
                 </p>
             </section>
@@ -75,13 +80,15 @@ export default function PaginaMaterias() {
                                 {m.materiaClave} · grupo {m.grupoClave} · {m.creditos} créditos
                             </p>
                         </div>
-                        <button
-                            className="boton boton--secundario boton--chico"
-                            onClick={() => baja(m.inscripcionId, m.materiaNombre)}
-                            disabled={ocupado}
-                        >
-                            Dar de baja
-                        </button>
+                        {abierto && (
+                            <button
+                                className="boton boton--secundario boton--chico"
+                                onClick={() => baja(m.inscripcionId, m.materiaNombre)}
+                                disabled={ocupado}
+                            >
+                                Dar de baja
+                            </button>
+                        )}
                     </li>
                 ))}
             </ul>

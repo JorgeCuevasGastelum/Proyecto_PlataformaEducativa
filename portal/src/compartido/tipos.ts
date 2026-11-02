@@ -33,6 +33,15 @@ export interface PeriodoEscolar {
   habilitado: boolean;
 }
 
+export interface Materia {
+  id: number;
+  clave: string;
+  nombre: string;
+  descripcion: string;
+  creditos: number;
+  prerrequisitoIds: number[];
+}
+
 export interface GrupoDeCatalogo {
   grupoId: number;
   grupoClave: string;

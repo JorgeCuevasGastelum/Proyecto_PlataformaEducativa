@@ -6,6 +6,7 @@ import { Cargando } from "../compartido/componentes/Cargando";
 import { MensajeError } from "../compartido/componentes/MensajeError";
 import { NoEncontrado } from "../compartido/componentes/NoEncontrado";
 import { mensajeDeError } from "../compartido/servicios/api";
+import { usePeriodos } from "../compartido/usePeriodos";
 import type { AlumnoEnLista, CapturaDeCalificacion } from "../compartido/tipos";
 
 interface Aviso {
@@ -16,9 +17,10 @@ interface Aviso {
 interface FormularioProps {
     grupoId: number;
     alumnos: AlumnoEnLista[];
+    cargaAbierta: boolean;
 }
 
-function FormularioCalificaciones({ grupoId, alumnos }: FormularioProps) {
+function FormularioCalificaciones({ grupoId, alumnos, cargaAbierta }: FormularioProps) {
     const [valores, setValores] = useState<Record<number, string>>({});
     const [errores, setErrores] = useState<Record<number, string>>({});
     const [aviso, setAviso] = useState<Aviso | null>(null);
@@ -71,6 +73,12 @@ function FormularioCalificaciones({ grupoId, alumnos }: FormularioProps) {
 
     return (
         <form onSubmit={guardar} noValidate>
+            {cargaAbierta && (
+                <p className="aviso aviso--info">
+                    La carga de este período sigue abierta, así que todavía no se pueden capturar calificaciones.
+                </p>
+            )}
+
             {aviso && <p className={`aviso aviso--${aviso.tipo}`}>{aviso.texto}</p>}
 
             <ul className="lista">
@@ -85,6 +93,7 @@ function FormularioCalificaciones({ grupoId, alumnos }: FormularioProps) {
                             <input
                                 className={errores[a.inscripcionId] ? "campo__control campo__control--error" : "campo__control"}
                                 value={valorDe(a)}
+                                disabled={cargaAbierta}
                                 onChange={(e) => setValores({ ...valores, [a.inscripcionId]: e.target.value })}
                             />
                             {errores[a.inscripcionId] && <p className="campo__error">{errores[a.inscripcionId]}</p>}
@@ -94,7 +103,7 @@ function FormularioCalificaciones({ grupoId, alumnos }: FormularioProps) {
             </ul>
 
             <div className="formulario__acciones">
-                <button className="boton" type="submit" disabled={enviando}>
+                <button className="boton" type="submit" disabled={enviando || cargaAbierta}>
                     {enviando ? "Guardando..." : "Guardar calificaciones"}
                 </button>
             </div>
@@ -105,10 +114,17 @@ function FormularioCalificaciones({ grupoId, alumnos }: FormularioProps) {
 export default function PaginaCalificaciones() {
     const { grupoId } = useParams();
     const { grupo, alumnos, cargando, error, reintentar } = useGrupoMaestro(Number(grupoId));
+    const periodos = usePeriodos();
 
-    if (cargando) return <Cargando />;
+    if (cargando || periodos.cargando) return <Cargando />;
     if (error) return <MensajeError mensaje={error} onReintentar={reintentar} />;
+    if (periodos.error) return <MensajeError mensaje={periodos.error} onReintentar={periodos.reintentar} />;
     if (!grupo) return <NoEncontrado />;
+
+    let cargaAbierta = false;
+    for (const p of periodos.periodos) {
+        if (p.clave === grupo.periodoClave && p.habilitado) cargaAbierta = true;
+    }
 
     return (
         <>
@@ -130,7 +146,7 @@ export default function PaginaCalificaciones() {
                 </section>
             )}
 
-            {alumnos.length > 0 && <FormularioCalificaciones grupoId={Number(grupoId)} alumnos={alumnos} />}
+            {alumnos.length > 0 && <FormularioCalificaciones grupoId={Number(grupoId)} alumnos={alumnos} cargaAbierta={cargaAbierta} />}
         </>
     );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { useOferta } from "./useOferta";
+import { useRestricciones } from "./useRestricciones";
 import { inscribirse } from "./servicio";
 import { Cargando } from "../compartido/componentes/Cargando";
 import { MensajeError } from "../compartido/componentes/MensajeError";
@@ -19,6 +20,7 @@ interface Aviso {
 export default function PaginaOferta() {
     const { grupos, cargando, error, reintentar } = useOferta();
     const periodos = usePeriodos();
+    const requisitos = useRestricciones();
 
     const inscritas = useMaterias((estado) => estado.lista);
     const cargarMaterias = useMaterias((estado) => estado.cargar);
@@ -26,9 +28,10 @@ export default function PaginaOferta() {
     const [aviso, setAviso] = useState<Aviso | null>(null);
     const [ocupado, setOcupado] = useState<number | null>(null);
 
-    if (cargando || periodos.cargando) return <Cargando />;
+    if (cargando || periodos.cargando || requisitos.cargando) return <Cargando />;
     if (error) return <MensajeError mensaje={error} onReintentar={reintentar} />;
     if (periodos.error) return <MensajeError mensaje={periodos.error} onReintentar={periodos.reintentar} />;
+    if (requisitos.error) return <MensajeError mensaje={requisitos.error} onReintentar={requisitos.reintentar} />;
 
     const abierto = periodoAbierto(periodos.periodos);
 
@@ -79,6 +82,10 @@ export default function PaginaOferta() {
 
                     if (g.disponibles === 0) {
                         accion = <span className="etiqueta etiqueta--ambar">Sin lugares</span>;
+                    }
+                    const restriccion = requisitos.restriccionDe(g);
+                    if (restriccion !== null) {
+                        accion = <span className="lista__meta">{restriccion}</span>;
                     }
                     for (const i of inscritas) {
                         if (i.materiaClave !== g.materiaClave) continue;

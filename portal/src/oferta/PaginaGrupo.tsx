@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useGrupo } from "./useGrupo";
+import { useRestricciones } from "./useRestricciones";
 import { inscribirse } from "./servicio";
 import { Cargando } from "../compartido/componentes/Cargando";
 import { MensajeError } from "../compartido/componentes/MensajeError";
@@ -18,6 +19,7 @@ export default function PaginaGrupo() {
     const { grupoId } = useParams();
 
     const { grupo, cargando, error, reintentar } = useGrupo(Number(grupoId));
+    const requisitos = useRestricciones();
 
     const inscritas = useMaterias((estado) => estado.lista);
     const cargarMaterias = useMaterias((estado) => estado.cargar);
@@ -25,8 +27,9 @@ export default function PaginaGrupo() {
     const [aviso, setAviso] = useState<Aviso | null>(null);
     const [ocupado, setOcupado] = useState(false);
 
-    if (cargando) return <Cargando />;
+    if (cargando || requisitos.cargando) return <Cargando />;
     if (error) return <MensajeError mensaje={error} onReintentar={reintentar} />;
+    if (requisitos.error) return <MensajeError mensaje={requisitos.error} onReintentar={requisitos.reintentar} />;
     if (!grupo) return <NoEncontrado />;
 
     const elegido = grupo;
@@ -55,6 +58,10 @@ export default function PaginaGrupo() {
 
     if (elegido.disponibles === 0) {
         accion = <span className="etiqueta etiqueta--ambar">Sin lugares</span>;
+    }
+    const restriccion = requisitos.restriccionDe(elegido);
+    if (restriccion !== null) {
+        accion = <span className="lista__meta">{restriccion}</span>;
     }
     for (const i of inscritas) {
         if (i.materiaClave !== elegido.materiaClave) continue;
