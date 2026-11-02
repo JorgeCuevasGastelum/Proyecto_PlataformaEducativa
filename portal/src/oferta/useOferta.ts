@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { mensajeDeError } from '../compartido/servicios/api';
 import type { GrupoDeCatalogo } from '../compartido/tipos';
-import { traerGrupos } from './servicio';
+import { traerGrupos, traerMiPlan } from './servicio';
 
 export function useOferta() {
   const [grupos, setGrupos] = useState<GrupoDeCatalogo[]>([]);
@@ -11,8 +11,14 @@ export function useOferta() {
 
   useEffect(() => {
     let vigente = true;
-    traerGrupos()
-      .then((lista) => { if (vigente) setGrupos(lista); })
+    Promise.all([traerGrupos(), traerMiPlan()])
+      .then(([lista, plan]) => {
+        const delPlan: GrupoDeCatalogo[] = [];
+        for (const grupo of lista) {
+          if (plan.materiaIds.includes(grupo.materiaId)) delPlan.push(grupo);
+        }
+        if (vigente) setGrupos(delPlan);
+      })
       .catch((e) => { if (vigente) setError(mensajeDeError(e, 'No se pudo obtener la oferta de grupos.')); })
       .finally(() => { if (vigente) setCargando(false); });
     return () => { vigente = false; };

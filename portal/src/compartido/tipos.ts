@@ -42,6 +42,13 @@ export interface Materia {
   prerrequisitoIds: number[];
 }
 
+export interface PlanDeEstudios {
+  id: number;
+  clave: string;
+  carreraId: number;
+  materiaIds: number[];
+}
+
 export interface GrupoDeCatalogo {
   grupoId: number;
   grupoClave: string;
