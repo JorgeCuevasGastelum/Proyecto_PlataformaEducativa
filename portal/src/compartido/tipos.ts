@@ -1,147 +1,41 @@
-export type Rol = 'alumno' | 'maestro' | 'administrador';
+// Los tipos de lo que viaja por la red se declaran una sola vez, en el servicio
+// (src/dominio/entidades.ts), y aquí solo se importan. Son importaciones de tipo:
+// no meten código del servicio en el portal, solo lo usa TypeScript para revisar.
+import type * as Servicio from '@servicio/dominio/entidades';
 
-export type DiaSemana = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado';
+// Por JSON las fechas (Date) llegan como texto ISO; el resto llega igual.
+export type EnJson<T> = T extends Date
+  ? string
+  : T extends (infer U)[]
+    ? EnJson<U>[]
+    : T extends object
+      ? { [K in keyof T]: EnJson<T[K]> }
+      : T;
 
-export type ConceptoDePago = 'inscripcion' | 'colegiatura';
+export type Rol = Servicio.Rol;
+export type DiaSemana = Servicio.DiaSemana;
+export type ConceptoDePago = Servicio.ConceptoDePago;
+export type EstadoDePago = Servicio.EstadoDePago;
 
-export type EstadoDePago = 'pendiente' | 'pagado';
+export type RespuestaDeLogin = EnJson<Servicio.CredencialDeAcceso>;
+export type SesionDelServicio = EnJson<Servicio.Sesion>;
+export type BloqueHorario = EnJson<Servicio.BloqueHorario>;
+export type PeriodoEscolar = EnJson<Servicio.PeriodoEscolar>;
+export type Materia = EnJson<Servicio.Materia>;
+export type PlanDeEstudios = EnJson<Servicio.PlanDeEstudios>;
+export type GrupoDeCatalogo = EnJson<Servicio.GrupoDeCatalogo>;
+export type Inscripcion = EnJson<Servicio.Inscripcion>;
+export type MateriaInscrita = EnJson<Servicio.MateriaInscrita>;
+export type RenglonDeHorario = EnJson<Servicio.RenglonDeHorario>;
+export type MateriaCursada = EnJson<Servicio.MateriaCursada>;
+export type Historial = EnJson<Servicio.Historial>;
+export type Pago = EnJson<Servicio.Pago>;
+export type Aviso = EnJson<Servicio.Aviso>;
+export type GrupoDelMaestro = EnJson<Servicio.GrupoDelMaestro>;
+export type AlumnoEnLista = EnJson<Servicio.AlumnoEnLista>;
+export type CapturaDeCalificacion = EnJson<Servicio.CapturaDeCalificacion>;
 
-export interface RespuestaDeLogin {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-export interface SesionDelServicio {
-  usuarioId: number;
-  rol: Rol;
-  personaId: number;
-}
-
-export interface BloqueHorario {
-  diaSemana: DiaSemana;
-  minutoInicio: number;
-  minutoFin: number;
-}
-
-export interface PeriodoEscolar {
-  id: number;
-  clave: string;
-  fechaAperturaCarga: string;
-  fechaCierreCarga: string;
-  creditosMaximos: number;
-  habilitado: boolean;
-}
-
-export interface Materia {
-  id: number;
-  clave: string;
-  nombre: string;
-  descripcion: string;
-  creditos: number;
-  prerrequisitoIds: number[];
-}
-
-export interface PlanDeEstudios {
-  id: number;
-  clave: string;
-  carreraId: number;
-  materiaIds: number[];
-}
-
-export interface GrupoDeCatalogo {
-  grupoId: number;
-  grupoClave: string;
-  materiaId: number;
-  materiaClave: string;
-  materiaNombre: string;
-  creditos: number;
-  maestroNombre: string;
-  periodoClave: string;
-  cupoMaximo: number;
-  disponibles: number;
-  horario: BloqueHorario[];
-}
-
-export interface Inscripcion {
-  id: number;
-  alumnoId: number;
-  grupoId: number;
-  fechaRegistro: string;
-  estadoActual: 'activa' | 'baja';
-  calificacion: number | null;
-}
-
-export interface MateriaInscrita {
-  inscripcionId: number;
-  materiaClave: string;
-  materiaNombre: string;
-  grupoClave: string;
-  creditos: number;
-}
-
-export interface RenglonDeHorario {
-  diaSemana: DiaSemana;
-  minutoInicio: number;
-  minutoFin: number;
-  materiaNombre: string;
-  grupoClave: string;
-  maestroNombre: string;
-}
-
-export interface MateriaCursada {
-  materiaClave: string;
-  materiaNombre: string;
-  creditos: number;
-  grupoClave: string;
-  calificacion: number | null;
-  aprobada: boolean | null;
-}
-
-export interface Historial {
-  periodoClave: string;
-  materias: MateriaCursada[];
-}
-
-export interface Pago {
-  id: number;
-  alumnoId: number;
-  periodoId: number;
-  concepto: ConceptoDePago;
-  monto: number;
-  fechaLimite: string;
-  estado: EstadoDePago;
-  fechaPago: string | null;
-}
-
-export interface Aviso {
-  id: number;
-  titulo: string;
-  contenido: string;
-  periodoId: number;
-  fechaPublicacion: string;
-}
-
-export interface GrupoDelMaestro {
-  grupoId: number;
-  grupoClave: string;
-  materiaNombre: string;
-  periodoClave: string;
-  inscritos: number;
-}
-
-export interface AlumnoEnLista {
-  inscripcionId: number;
-  matricula: string;
-  nombre: string;
-  calificacion: number | null;
-}
-
-export interface CapturaDeCalificacion {
-  inscripcionId: number;
-  calificacion: number;
-}
-
+// Estos dos no viajan por la red: son lo que el portal guarda de la sesión en el navegador.
 export interface Usuario {
   correo: string;
   rol: Rol;

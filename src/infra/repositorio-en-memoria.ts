@@ -53,10 +53,10 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
   private alumnos: Alumno[] = [
     { id: 1, matricula: '00001', nombre: 'Karla', planDeEstudiosId: 1 },
     { id: 2, matricula: '00002', nombre: 'Juan', planDeEstudiosId: 1 },
-    { id: 3, matricula: '00003', nombre: 'Sofia', planDeEstudiosId: 1 },
+    { id: 3, matricula: '00003', nombre: 'Sofía', planDeEstudiosId: 1 },
     { id: 4, matricula: '00004', nombre: 'Pedro', planDeEstudiosId: 2 },
     { id: 5, matricula: '00005', nombre: 'Mario', planDeEstudiosId: 1 },
-    { id: 6, matricula: '00006', nombre: 'Lucia', planDeEstudiosId: 1 },
+    { id: 6, matricula: '00006', nombre: 'Lucía', planDeEstudiosId: 1 },
     { id: 7, matricula: '00007', nombre: 'Diego', planDeEstudiosId: 1 },
   ];
 
@@ -80,17 +80,17 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
   ];
 
   private materias: Materia[] = [
-    { id: 1, clave: 'PROG1', nombre: 'Programacion I', descripcion: 'Introduccion a la programacion', creditos: 6, prerrequisitoIds: [] },
-    { id: 2, clave: 'PROG2', nombre: 'Programacion II', descripcion: 'Programacion orientada a objetos', creditos: 6, prerrequisitoIds: [1] },
+    { id: 1, clave: 'PROG1', nombre: 'Programación I', descripcion: 'Introducción a la programación', creditos: 6, prerrequisitoIds: [] },
+    { id: 2, clave: 'PROG2', nombre: 'Programación II', descripcion: 'Programación orientada a objetos', creditos: 6, prerrequisitoIds: [1] },
     { id: 3, clave: 'BADA', nombre: 'Bases de Datos', descripcion: 'Modelado y SQL', creditos: 6, prerrequisitoIds: [] },
     { id: 4, clave: 'REDE', nombre: 'Redes', descripcion: 'Fundamentos de redes', creditos: 5, prerrequisitoIds: [] },
     { id: 5, clave: 'ESDA', nombre: 'Estructuras de Datos', descripcion: 'Listas, pilas y colas', creditos: 6, prerrequisitoIds: [1] },
-    { id: 6, clave: 'ING1', nombre: 'Ingles I', descripcion: 'Ingles basico', creditos: 4, prerrequisitoIds: [] },
-    { id: 7, clave: 'ESTA', nombre: 'Estadistica', descripcion: 'Probabilidad y estadistica', creditos: 5, prerrequisitoIds: [] },
-    { id: 8, clave: 'CALD', nombre: 'Calculo Diferencial', descripcion: 'Limites, derivadas y sus aplicaciones', creditos: 5, prerrequisitoIds: [] },
-    { id: 9, clave: 'MADI', nombre: 'Matematicas Discretas', descripcion: 'Logica, conjuntos y grafos', creditos: 5, prerrequisitoIds: [] },
+    { id: 6, clave: 'ING1', nombre: 'Inglés I', descripcion: 'Inglés básico', creditos: 4, prerrequisitoIds: [] },
+    { id: 7, clave: 'ESTA', nombre: 'Estadística', descripcion: 'Probabilidad y estadística', creditos: 5, prerrequisitoIds: [] },
+    { id: 8, clave: 'CALD', nombre: 'Cálculo Diferencial', descripcion: 'Límites, derivadas y sus aplicaciones', creditos: 5, prerrequisitoIds: [] },
+    { id: 9, clave: 'MADI', nombre: 'Matemáticas Discretas', descripcion: 'Lógica, conjuntos y grafos', creditos: 5, prerrequisitoIds: [] },
     { id: 10, clave: 'SOPE', nombre: 'Sistemas Operativos', descripcion: 'Procesos, memoria y archivos', creditos: 6, prerrequisitoIds: [1] },
-    { id: 11, clave: 'INSO', nombre: 'Ingenieria de Software', descripcion: 'Ciclo de vida y metodologias', creditos: 6, prerrequisitoIds: [2] },
+    { id: 11, clave: 'INSO', nombre: 'Ingeniería de Software', descripcion: 'Ciclo de vida y metodologías', creditos: 6, prerrequisitoIds: [2] },
   ];
 
   // Inglés I (6) está en los dos planes: es una materia común entre carreras.
@@ -220,18 +220,18 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
   private avisos: Aviso[] = [
     {
       id: 1, periodoId: 2, fechaPublicacion: diasDesdeHoy(-1),
-      titulo: 'Ya puedes hacer tu carga academica',
-      contenido: 'La carga de 2026-2 esta abierta. Antes de elegir grupos, revisa en Pagos que tu inscripcion este pagada.',
+      titulo: 'Ya puedes hacer tu carga académica',
+      contenido: 'La carga de 2026-2 está abierta. Antes de elegir grupos, revisa en Pagos que tu inscripción esté pagada.',
     },
     {
       id: 2, periodoId: 2, fechaPublicacion: diasDesdeHoy(-3),
-      titulo: 'Fecha limite de colegiatura',
-      contenido: 'La colegiatura de 2026-2 vence en 20 dias. Un adeudo vencido impide inscribir materias.',
+      titulo: 'Fecha límite de colegiatura',
+      contenido: 'La colegiatura de 2026-2 vence en 20 días. Un adeudo vencido impide inscribir materias.',
     },
     {
       id: 3, periodoId: 2, fechaPublicacion: diasDesdeHoy(-5),
-      titulo: 'Grupos nuevos de Estadistica e Ingles I',
-      contenido: 'Se abrieron los grupos 02 de Estadistica (cupo reducido) e Ingles I.',
+      titulo: 'Grupos nuevos de Estadística e Inglés I',
+      contenido: 'Se abrieron los grupos 02 de Estadística (cupo reducido) e Inglés I.',
     },
   ];
 

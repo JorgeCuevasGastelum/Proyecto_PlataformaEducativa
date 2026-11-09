@@ -36,6 +36,13 @@ export interface Sesion {
   personaId: number;
 }
 
+// Lo que regresa POST /auth/login. El portal lo usa tal cual, por eso vive aqui y no solo en el DTO.
+export interface CredencialDeAcceso {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
 // --- Personas ---
 
 export interface Alumno {

@@ -5,7 +5,20 @@ Proyecto 4 — Portal universitario de carga académica. Este avance es el porta
 ## Requisitos
 
 - Node.js 20 o más reciente, y npm
-- El servicio del avance 2 (rama `feat-servicio`) corriendo en `http://localhost:3000`, con MySQL y los datos de prueba cargados con `npm run prisma:seed`
+- El servicio del avance 2 corriendo en `http://localhost:3000`, con MySQL y los datos de prueba cargados. Debe ser el de **esta misma rama** (`feat-storefront`): aquí el servicio ya trae los endpoints que usa el portal (`GET /alumnos/yo/plan` y `PATCH /alumnos/yo/pagos/:id`) y los datos de prueba nuevos.
+
+## Levantar el servicio
+
+Desde la raíz del repositorio (una carpeta arriba de `portal/`), con el `.env` del servicio ya configurado (ver el `README.md` de la raíz):
+
+```
+npm install
+npm run prisma:migrate
+npm run prisma:seed
+npm run start:dev
+```
+
+El seed borra y vuelve a cargar todos los datos de prueba.
 
 ## Levantar el portal desde cero
 
@@ -67,3 +80,7 @@ Dentro de `src/`:
 - `maestro`: pantallas del maestro
 
 Todo lo que se comunica con el servicio pasa por `compartido/servicios/api.ts`.
+
+### Tipos compartidos con el servicio
+
+Los tipos de los datos que viajan por la red no se copian: `compartido/tipos.ts` los importa con `import type` desde `src/dominio/entidades.ts` del servicio (alias `@servicio`, definido en `tsconfig.app.json`). Solo se adaptan las fechas, que en JSON llegan como texto. Si el servicio cambia un campo, el portal deja de compilar hasta que se ajuste. Como son importaciones de tipo, el portal no incluye código del servicio y sigue siendo una aplicación independiente.
