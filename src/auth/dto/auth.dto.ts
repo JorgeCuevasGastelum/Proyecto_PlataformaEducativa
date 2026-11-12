@@ -1,4 +1,5 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import type { CredencialDeAcceso } from '../../dominio/entidades';
 
 export class LoginDto {
   @IsEmail({}, { message: 'el correo no tiene un formato valido' })
@@ -9,7 +10,7 @@ export class LoginDto {
   contrasena: string;
 }
 
-export class TokenDto {
+export class TokenDto implements CredencialDeAcceso {
   access_token: string;
   token_type: string;
   expires_in: number;

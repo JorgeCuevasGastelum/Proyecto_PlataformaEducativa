@@ -1,10 +1,11 @@
-import { Controller, Get, Param, ParseIntPipe, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import type { Sesion } from '../dominio/entidades';
 import { ServicioAdministracion } from '../dominio/servicio-administracion';
 import { ServicioCatalogo } from '../dominio/servicio-catalogo';
+import { RegistrarPlanDto } from './dto/registrar-plan.dto';
 
 @Controller()
 @UseGuards(RolesGuard)
@@ -22,6 +23,13 @@ export class PlanesController {
   @Get('planes')
   listarPlanes() {
     return this.catalogo.listarPlanesDeEstudio();
+  }
+
+  @Post('planes')
+  @HttpCode(201)
+  @Roles('administrador')
+  registrarPlan(@UsuarioActual() sesion: Sesion, @Body() dto: RegistrarPlanDto) {
+    return this.administracion.registrarPlanDeEstudios(sesion, dto);
   }
 
   @Put('planes/:id/materias/:materiaId')

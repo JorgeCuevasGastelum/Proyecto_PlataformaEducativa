@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -7,7 +7,7 @@ import type { Sesion } from '../dominio/entidades';
 import { ServicioAdministracion } from '../dominio/servicio-administracion';
 import { ServicioCatalogo } from '../dominio/servicio-catalogo';
 import { ServicioMaestro } from '../dominio/servicio-maestro';
-import { AbrirGrupoDto, CapturarCalificacionesDto, ConsultarGruposDto } from './dto/grupo.dto';
+import { AbrirGrupoDto, ActualizarGrupoDto, CapturarCalificacionesDto, ConsultarGruposDto } from './dto/grupo.dto';
 
 @Controller('grupos')
 @UseGuards(RolesGuard)
@@ -31,6 +31,16 @@ export class GruposController {
       ...dto,
       horario: dto.horario.map((b) => crearBloqueHorario(b.diaSemana, b.horaInicio, b.horaFin)),
     });
+  }
+
+  @Patch(':id')
+  @Roles('administrador')
+  actualizar(
+    @UsuarioActual() sesion: Sesion,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ActualizarGrupoDto,
+  ) {
+    return this.administracion.actualizarGrupo(sesion, id, dto);
   }
 
   @Get(':id/ocupacion')

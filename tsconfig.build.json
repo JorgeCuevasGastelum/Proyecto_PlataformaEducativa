@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "dist", "prisma", "prisma.config.ts", "src/escenarios.ts"]
+  "exclude": ["node_modules", "portal", "dist", "prisma", "prisma.config.ts", "src/escenarios.ts"]
 }

@@ -55,6 +55,17 @@ export class AbrirGrupoDto {
   horario: BloqueHorarioDto[];
 }
 
+export class ActualizarGrupoDto {
+  @IsOptional()
+  @IsInt()
+  cupoMaximo?: number;
+
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  maestroId?: number;
+}
+
 export class CalificacionDto {
   @IsInt()
   @IsPositive()

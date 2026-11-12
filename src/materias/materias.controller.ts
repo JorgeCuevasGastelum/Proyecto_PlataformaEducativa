@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -25,5 +25,15 @@ export class MateriasController {
   @Roles('administrador')
   registrar(@UsuarioActual() sesion: Sesion, @Body() dto: RegistrarMateriaDto) {
     return this.administracion.registrarMateria(sesion, dto);
+  }
+
+  @Put(':id/prerrequisitos/:prerrequisitoId')
+  @Roles('administrador')
+  agregarPrerrequisito(
+    @UsuarioActual() sesion: Sesion,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('prerrequisitoId', ParseIntPipe) prerrequisitoId: number,
+  ) {
+    return this.administracion.agregarPrerrequisito(sesion, id, prerrequisitoId);
   }
 }

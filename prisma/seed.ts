@@ -11,6 +11,9 @@ const CORREOS = [
   'sofia@alumnos.edu.mx',
   'pedro@alumnos.edu.mx',
   'mario@alumnos.edu.mx',
+  'marta@maestros.edu.mx',
+  'lucia@alumnos.edu.mx',
+  'diego@alumnos.edu.mx',
 ];
 
 async function main() {
@@ -80,6 +83,11 @@ async function main() {
   for (const alumno of alumnos) {
     await prisma.inscripcion.createMany({ data: await memoria.listarInscripcionesDeAlumno(alumno.id) });
     await prisma.pago.createMany({ data: await memoria.listarPagosDeAlumno(alumno.id) });
+  }
+
+  for (const periodo of await memoria.listarPeriodos()) {
+    const avisos = await memoria.listarAvisosDePeriodo(periodo.id);
+    if (avisos.length > 0) await prisma.aviso.createMany({ data: avisos });
   }
 
   console.log('Datos de prueba cargados. Todas las cuentas usan la contrasena Potros2026.');

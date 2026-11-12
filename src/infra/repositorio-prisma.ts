@@ -22,6 +22,7 @@ import type {
   NuevoMaestro,
   NuevoPago,
   NuevoPeriodo,
+  NuevoPlanDeEstudios,
   NuevoUsuario,
   RepositorioAcademico,
 } from '../dominio/repositorio-academico';
@@ -157,6 +158,20 @@ export class RepositorioPrisma implements RepositorioAcademico {
     return p ? aPlan(p) : null;
   }
 
+  async buscarPlanDeEstudiosPorClave(clave: string): Promise<PlanDeEstudios | null> {
+    const p = await this.prisma.planDeEstudios.findUnique({ where: { clave }, include: conMaterias });
+    return p ? aPlan(p) : null;
+  }
+
+  async crearPlanDeEstudios(datos: NuevoPlanDeEstudios): Promise<PlanDeEstudios> {
+    const { materiaIds, ...plan } = datos;
+    const p = await this.prisma.planDeEstudios.create({
+      data: { ...plan, materias: { create: materiaIds.map((materiaId) => ({ materiaId })) } },
+      include: conMaterias,
+    });
+    return aPlan(p);
+  }
+
   async actualizarPlanDeEstudios(plan: PlanDeEstudios): Promise<void> {
     await this.prisma.$transaction([
       this.prisma.materiaEnPlan.deleteMany({ where: { planId: plan.id } }),
@@ -188,6 +203,15 @@ export class RepositorioPrisma implements RepositorioAcademico {
     return aMateria(m);
   }
 
+  async actualizarMateria(materia: Materia): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.prerrequisito.deleteMany({ where: { materiaId: materia.id } }),
+      this.prisma.prerrequisito.createMany({
+        data: materia.prerrequisitoIds.map((prerrequisitoId) => ({ materiaId: materia.id, prerrequisitoId })),
+      }),
+    ]);
+  }
+
   async buscarGrupoPorId(id: number): Promise<Grupo | null> {
     const g = await this.prisma.grupo.findUnique({ where: { id }, include: conHorario });
     return g ? aGrupo(g) : null;
@@ -215,6 +239,13 @@ export class RepositorioPrisma implements RepositorioAcademico {
       include: conHorario,
     });
     return aGrupo(g);
+  }
+
+  async actualizarGrupo(grupo: Grupo): Promise<void> {
+    await this.prisma.grupo.update({
+      where: { id: grupo.id },
+      data: { cupoMaximo: grupo.cupoMaximo, maestroId: grupo.maestroId },
+    });
   }
 
   // PERIODOS

@@ -22,6 +22,7 @@ import type {
   NuevoMaestro,
   NuevoPago,
   NuevoPeriodo,
+  NuevoPlanDeEstudios,
   NuevoUsuario,
   RepositorioAcademico,
 } from '../dominio/repositorio-academico.js';
@@ -46,14 +47,17 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
   private maestros: Maestro[] = [
     { id: 1, numeroEmpleado: '12345', nombre: 'Ana' },
     { id: 2, numeroEmpleado: '13243', nombre: 'Luis' },
+    { id: 3, numeroEmpleado: '14567', nombre: 'Marta' },
   ];
 
   private alumnos: Alumno[] = [
     { id: 1, matricula: '00001', nombre: 'Karla', planDeEstudiosId: 1 },
     { id: 2, matricula: '00002', nombre: 'Juan', planDeEstudiosId: 1 },
-    { id: 3, matricula: '00003', nombre: 'Sofia', planDeEstudiosId: 1 },
+    { id: 3, matricula: '00003', nombre: 'Sofía', planDeEstudiosId: 1 },
     { id: 4, matricula: '00004', nombre: 'Pedro', planDeEstudiosId: 2 },
     { id: 5, matricula: '00005', nombre: 'Mario', planDeEstudiosId: 1 },
+    { id: 6, matricula: '00006', nombre: 'Lucía', planDeEstudiosId: 1 },
+    { id: 7, matricula: '00007', nombre: 'Diego', planDeEstudiosId: 1 },
   ];
 
   private usuarios: Usuario[] = [
@@ -65,6 +69,9 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     this.usuario(6, 'sofia@alumnos.edu.mx', 'alumno', 3),
     this.usuario(7, 'pedro@alumnos.edu.mx', 'alumno', 4),
     this.usuario(8, 'mario@alumnos.edu.mx', 'alumno', 5),
+    this.usuario(9, 'marta@maestros.edu.mx', 'maestro', 3),
+    this.usuario(10, 'lucia@alumnos.edu.mx', 'alumno', 6),
+    this.usuario(11, 'diego@alumnos.edu.mx', 'alumno', 7),
   ];
 
   private carreras: Carrera[] = [
@@ -73,19 +80,23 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
   ];
 
   private materias: Materia[] = [
-    { id: 1, clave: 'PROG1', nombre: 'Programacion I', descripcion: 'Introduccion a la programacion', creditos: 6, prerrequisitoIds: [] },
-    { id: 2, clave: 'PROG2', nombre: 'Programacion II', descripcion: 'Programacion orientada a objetos', creditos: 6, prerrequisitoIds: [1] },
+    { id: 1, clave: 'PROG1', nombre: 'Programación I', descripcion: 'Introducción a la programación', creditos: 6, prerrequisitoIds: [] },
+    { id: 2, clave: 'PROG2', nombre: 'Programación II', descripcion: 'Programación orientada a objetos', creditos: 6, prerrequisitoIds: [1] },
     { id: 3, clave: 'BADA', nombre: 'Bases de Datos', descripcion: 'Modelado y SQL', creditos: 6, prerrequisitoIds: [] },
     { id: 4, clave: 'REDE', nombre: 'Redes', descripcion: 'Fundamentos de redes', creditos: 5, prerrequisitoIds: [] },
     { id: 5, clave: 'ESDA', nombre: 'Estructuras de Datos', descripcion: 'Listas, pilas y colas', creditos: 6, prerrequisitoIds: [1] },
-    { id: 6, clave: 'ING1', nombre: 'Ingles I', descripcion: 'Ingles basico', creditos: 4, prerrequisitoIds: [] },
-    { id: 7, clave: 'ESTA', nombre: 'Estadistica', descripcion: 'Probabilidad y estadistica', creditos: 5, prerrequisitoIds: [] },
+    { id: 6, clave: 'ING1', nombre: 'Inglés I', descripcion: 'Inglés básico', creditos: 4, prerrequisitoIds: [] },
+    { id: 7, clave: 'ESTA', nombre: 'Estadística', descripcion: 'Probabilidad y estadística', creditos: 5, prerrequisitoIds: [] },
+    { id: 8, clave: 'CALD', nombre: 'Cálculo Diferencial', descripcion: 'Límites, derivadas y sus aplicaciones', creditos: 5, prerrequisitoIds: [] },
+    { id: 9, clave: 'MADI', nombre: 'Matemáticas Discretas', descripcion: 'Lógica, conjuntos y grafos', creditos: 5, prerrequisitoIds: [] },
+    { id: 10, clave: 'SOPE', nombre: 'Sistemas Operativos', descripcion: 'Procesos, memoria y archivos', creditos: 6, prerrequisitoIds: [1] },
+    { id: 11, clave: 'INSO', nombre: 'Ingeniería de Software', descripcion: 'Ciclo de vida y metodologías', creditos: 6, prerrequisitoIds: [2] },
   ];
 
   // Inglés I (6) está en los dos planes: es una materia común entre carreras.
   private planes: PlanDeEstudios[] = [
-    { id: 1, clave: 'ISW-2020', carreraId: 1, materiaIds: [1, 2, 3, 4, 5, 6] },
-    { id: 2, clave: 'IIS-2020', carreraId: 2, materiaIds: [6, 7] },
+    { id: 1, clave: 'ISW-2020', carreraId: 1, materiaIds: [1, 2, 3, 4, 5, 6, 8, 9, 10, 11] },
+    { id: 2, clave: 'IIS-2020', carreraId: 2, materiaIds: [6, 7, 8] },
   ];
 
   private periodos: PeriodoEscolar[] = [
@@ -142,6 +153,35 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
       id: 8, materiaId: 7, periodoId: 2, clave: '01', maestroId: 2, cupoMaximo: 30,
       horario: [crearBloqueHorario('miercoles', '12:00', '13:30')],
     },
+    {
+      id: 9, materiaId: 8, periodoId: 2, clave: '01', maestroId: 3, cupoMaximo: 25,
+      horario: [crearBloqueHorario('lunes', '09:00', '10:30'), crearBloqueHorario('miercoles', '09:00', '10:30')],
+    },
+    {
+      id: 10, materiaId: 9, periodoId: 2, clave: '01', maestroId: 3, cupoMaximo: 25,
+      horario: [crearBloqueHorario('martes', '07:00', '08:30'), crearBloqueHorario('jueves', '07:00', '08:30')],
+    },
+    {
+      id: 11, materiaId: 10, periodoId: 2, clave: '01', maestroId: 3, cupoMaximo: 20,
+      horario: [crearBloqueHorario('martes', '12:00', '13:30'), crearBloqueHorario('jueves', '12:00', '13:30')],
+    },
+    {
+      id: 12, materiaId: 11, periodoId: 2, clave: '01', maestroId: 1, cupoMaximo: 20,
+      horario: [crearBloqueHorario('viernes', '09:00', '11:00')],
+    },
+    {
+      id: 13, materiaId: 7, periodoId: 2, clave: '02', maestroId: 3, cupoMaximo: 2,
+      horario: [crearBloqueHorario('sabado', '09:00', '11:00')],
+    },
+    {
+      id: 14, materiaId: 6, periodoId: 2, clave: '02', maestroId: 3, cupoMaximo: 30,
+      horario: [crearBloqueHorario('miercoles', '16:00', '17:30')],
+    },
+    // Periodo 2026-1 (ya cerrado)
+    {
+      id: 15, materiaId: 1, periodoId: 1, clave: '03', maestroId: 3, cupoMaximo: 30,
+      horario: [crearBloqueHorario('jueves', '09:00', '10:30'), crearBloqueHorario('viernes', '09:00', '10:30')],
+    },
   ];
 
   private inscripciones: Inscripcion[] = [
@@ -152,6 +192,11 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     { id: 4, alumnoId: 3, grupoId: 2, fechaRegistro: diasDesdeHoy(-170), estadoActual: 'activa', calificacion: 95 },
     // 2026-2: Juan ocupa el unico lugar de Estructuras de Datos.
     { id: 5, alumnoId: 2, grupoId: 6, fechaRegistro: new Date(), estadoActual: 'activa', calificacion: null },
+    // Lucia: aprobo Programacion I en 2026-1 y ya tiene su carga de 2026-2.
+    { id: 6, alumnoId: 6, grupoId: 15, fechaRegistro: diasDesdeHoy(-170), estadoActual: 'activa', calificacion: 88 },
+    { id: 7, alumnoId: 6, grupoId: 3, fechaRegistro: new Date(), estadoActual: 'activa', calificacion: null },
+    { id: 8, alumnoId: 6, grupoId: 9, fechaRegistro: new Date(), estadoActual: 'activa', calificacion: null },
+    { id: 9, alumnoId: 6, grupoId: 7, fechaRegistro: new Date(), estadoActual: 'activa', calificacion: null },
   ];
 
   // Todos tienen pagada la inscripción del 2026-2 excepto Mario.
@@ -161,9 +206,34 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     this.pagoDeInscripcion(3, 3, 'pagado'),
     this.pagoDeInscripcion(4, 4, 'pagado'),
     this.pagoDeInscripcion(5, 5, 'pendiente'),
+    this.pagoDeInscripcion(6, 6, 'pagado'),
+    this.pagoDeInscripcion(7, 7, 'pagado'),
+    { id: 8, alumnoId: 6, periodoId: 2, concepto: 'colegiatura', monto: 8500, fechaLimite: diasDesdeHoy(20), estado: 'pendiente', fechaPago: null },
+    { id: 9, alumnoId: 6, periodoId: 1, concepto: 'inscripcion', monto: 2500, fechaLimite: diasDesdeHoy(-175), estado: 'pagado', fechaPago: diasDesdeHoy(-178) },
+    { id: 10, alumnoId: 6, periodoId: 1, concepto: 'colegiatura', monto: 8500, fechaLimite: diasDesdeHoy(-150), estado: 'pagado', fechaPago: diasDesdeHoy(-155) },
+    // Diego tiene la inscripcion pagada pero una colegiatura vencida: no puede inscribirse.
+    { id: 11, alumnoId: 7, periodoId: 2, concepto: 'colegiatura', monto: 8500, fechaLimite: diasDesdeHoy(-10), estado: 'pendiente', fechaPago: null },
+    { id: 12, alumnoId: 1, periodoId: 2, concepto: 'colegiatura', monto: 8500, fechaLimite: diasDesdeHoy(20), estado: 'pendiente', fechaPago: null },
   ];
 
-  private avisos: Aviso[] = [];
+  // El periodo 2026-1 no tiene avisos a proposito.
+  private avisos: Aviso[] = [
+    {
+      id: 1, periodoId: 2, fechaPublicacion: diasDesdeHoy(-1),
+      titulo: 'Ya puedes hacer tu carga académica',
+      contenido: 'La carga de 2026-2 está abierta. Antes de elegir grupos, revisa en Pagos que tu inscripción esté pagada.',
+    },
+    {
+      id: 2, periodoId: 2, fechaPublicacion: diasDesdeHoy(-3),
+      titulo: 'Fecha límite de colegiatura',
+      contenido: 'La colegiatura de 2026-2 vence en 20 días. Un adeudo vencido impide inscribir materias.',
+    },
+    {
+      id: 3, periodoId: 2, fechaPublicacion: diasDesdeHoy(-5),
+      titulo: 'Grupos nuevos de Estadística e Inglés I',
+      contenido: 'Se abrieron los grupos 02 de Estadística (cupo reducido) e Inglés I.',
+    },
+  ];
 
   // ACCESO
 
@@ -237,6 +307,16 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return this.planes.find((p) => p.id === id) ?? null;
   }
 
+  async buscarPlanDeEstudiosPorClave(clave: string): Promise<PlanDeEstudios | null> {
+    return this.planes.find((p) => p.clave === clave) ?? null;
+  }
+
+  async crearPlanDeEstudios(datos: NuevoPlanDeEstudios): Promise<PlanDeEstudios> {
+    const nuevo: PlanDeEstudios = { id: siguienteId(this.planes), ...datos };
+    this.planes.push(nuevo);
+    return nuevo;
+  }
+
   async actualizarPlanDeEstudios(plan: PlanDeEstudios): Promise<void> {
     const indice = this.planes.findIndex((p) => p.id === plan.id);
     if (indice !== -1) this.planes[indice] = plan;
@@ -260,6 +340,11 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return nueva;
   }
 
+  async actualizarMateria(materia: Materia): Promise<void> {
+    const indice = this.materias.findIndex((m) => m.id === materia.id);
+    if (indice !== -1) this.materias[indice] = materia;
+  }
+
   async buscarGrupoPorId(id: number): Promise<Grupo | null> {
     return this.grupos.find((g) => g.id === id) ?? null;
   }
@@ -280,6 +365,11 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     const nuevo: Grupo = { id: siguienteId(this.grupos), ...datos };
     this.grupos.push(nuevo);
     return nuevo;
+  }
+
+  async actualizarGrupo(grupo: Grupo): Promise<void> {
+    const indice = this.grupos.findIndex((g) => g.id === grupo.id);
+    if (indice !== -1) this.grupos[indice] = grupo;
   }
 
   // PERIODOS

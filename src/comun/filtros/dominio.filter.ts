@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Logger } from '@nest
 import { Response } from 'express';
 import {
   AlumnoNoEncontradoError,
+  CarreraNoEncontradaError,
   CredencialesInvalidasError,
   ErrorDeDominio,
   GrupoAjenoError,
@@ -18,6 +19,7 @@ import { respuestaDeError } from './respuesta-error';
 
 const NO_ENCONTRADOS = [
   AlumnoNoEncontradoError,
+  CarreraNoEncontradaError,
   MaestroNoEncontradoError,
   MateriaNoEncontradaError,
   PlanDeEstudiosNoEncontradoError,

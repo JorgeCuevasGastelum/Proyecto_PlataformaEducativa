@@ -17,8 +17,11 @@ import type {
 import {
   AlumnoInvalidoError,
   AlumnoNoEncontradoError,
+  CarreraNoEncontradaError,
   ClaveDeMateriaDuplicadaError,
   ClaveDePeriodoDuplicadaError,
+  ClaveDePlanDuplicadaError,
+  CupoMenorAInscritosError,
   ContrasenaDebilError,
   CorreoDuplicadoError,
   EmpalmeDeMaestroError,
@@ -51,6 +54,16 @@ interface DatosNuevaMateria {
   descripcion: string;
   creditos: number;
   prerrequisitoIds: number[];
+}
+
+interface DatosNuevoPlan {
+  clave: string;
+  carreraId: number;
+}
+
+interface CambiosDeGrupo {
+  cupoMaximo?: number;
+  maestroId?: number;
 }
 
 interface DatosNuevoGrupo {
@@ -187,6 +200,76 @@ export class ServicioAdministracion {
 
     const actualizado: PlanDeEstudios = { ...plan, materiaIds: [...plan.materiaIds, materiaId] };
     await this.repo.actualizarPlanDeEstudios(actualizado);
+    return actualizado;
+  }
+
+  async registrarPlanDeEstudios(sesion: Sesion, datos: DatosNuevoPlan): Promise<PlanDeEstudios> {
+    await this.verificarAdministrador(sesion);
+
+    const carrera = await this.repo.buscarCarreraPorId(datos.carreraId);
+    if (!carrera) throw new CarreraNoEncontradaError(String(datos.carreraId));
+
+    const existente = await this.repo.buscarPlanDeEstudiosPorClave(datos.clave);
+    if (existente) throw new ClaveDePlanDuplicadaError(datos.clave);
+
+    return this.repo.crearPlanDeEstudios({ clave: datos.clave, carreraId: carrera.id, materiaIds: [] });
+  }
+
+  async agregarPrerrequisito(sesion: Sesion, materiaId: number, prerrequisitoId: number): Promise<Materia> {
+    await this.verificarAdministrador(sesion);
+
+    const materia = await this.repo.buscarMateriaPorId(materiaId);
+    if (!materia) throw new MateriaNoEncontradaError(String(materiaId));
+
+    const prerrequisito = await this.repo.buscarMateriaPorId(prerrequisitoId);
+    if (!prerrequisito) throw new MateriaNoEncontradaError(String(prerrequisitoId));
+
+    if (materia.prerrequisitoIds.includes(prerrequisitoId)) return materia;
+
+    const actualizada: Materia = { ...materia, prerrequisitoIds: [...materia.prerrequisitoIds, prerrequisitoId] };
+    await this.repo.actualizarMateria(actualizada);
+    return actualizada;
+  }
+
+  async actualizarGrupo(sesion: Sesion, grupoId: number, cambios: CambiosDeGrupo): Promise<Grupo> {
+    await this.verificarAdministrador(sesion);
+
+    const grupo = await this.repo.buscarGrupoPorId(grupoId);
+    if (!grupo) throw new GrupoNoEncontradoError(String(grupoId));
+
+    const materia = await this.repo.buscarMateriaPorId(grupo.materiaId);
+    const nombreDelGrupo = `${materia?.nombre ?? ''} ${grupo.clave}`;
+
+    let cupoMaximo = grupo.cupoMaximo;
+    if (cambios.cupoMaximo !== undefined) {
+      if (cambios.cupoMaximo <= 0) throw new GrupoInvalidoError('el cupo debe ser mayor a cero');
+
+      const inscritos = await this.repo.contarInscripcionesActivasDeGrupo(grupo.id);
+      if (cambios.cupoMaximo < inscritos) {
+        throw new CupoMenorAInscritosError(nombreDelGrupo, cambios.cupoMaximo, inscritos);
+      }
+      cupoMaximo = cambios.cupoMaximo;
+    }
+
+    let maestroId = grupo.maestroId;
+    if (cambios.maestroId !== undefined && cambios.maestroId !== grupo.maestroId) {
+      const maestro = await this.repo.buscarMaestroPorId(cambios.maestroId);
+      if (!maestro) throw new MaestroNoEncontradoError(String(cambios.maestroId));
+
+      const gruposDelMaestro = (await this.repo.listarGruposDeMaestro(maestro.id)).filter(
+        (g) => g.periodoId === grupo.periodoId && g.id !== grupo.id,
+      );
+      for (const otroGrupo of gruposDelMaestro) {
+        if (horariosSeEmpalman(grupo.horario, otroGrupo.horario)) {
+          const otraMateria = await this.repo.buscarMateriaPorId(otroGrupo.materiaId);
+          throw new EmpalmeDeMaestroError(maestro.nombre, `${otraMateria?.nombre ?? ''} (grupo ${otroGrupo.clave})`);
+        }
+      }
+      maestroId = maestro.id;
+    }
+
+    const actualizado: Grupo = { ...grupo, cupoMaximo, maestroId };
+    await this.repo.actualizarGrupo(actualizado);
     return actualizado;
   }
 
