@@ -61,14 +61,14 @@ export default function PaginaGrupo() {
     }
     const restriccion = requisitos.restriccionDe(elegido);
     if (restriccion !== null) {
-        accion = <span className="lista__meta">{restriccion}</span>;
+        accion = <span className="etiqueta etiqueta--ambar">{restriccion}</span>;
     }
     for (const i of inscritas) {
         if (i.materiaClave !== elegido.materiaClave) continue;
         if (i.grupoClave === elegido.grupoClave) {
             accion = <span className="etiqueta etiqueta--verde">Ya estás inscrito</span>;
         } else {
-            accion = <span className="lista__meta">Ya llevas esta materia en otro grupo</span>;
+            accion = <span className="etiqueta etiqueta--azul">Ya llevas esta materia en otro grupo</span>;
         }
     }
 

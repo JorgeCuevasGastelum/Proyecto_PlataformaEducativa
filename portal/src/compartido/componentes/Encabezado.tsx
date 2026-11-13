@@ -46,10 +46,11 @@ export function Encabezado() {
     <header className="barra">
       <div className="barra__interior">
         <Link to="/" className="barra__marca">
+          <img src="/logo.svg" alt="" />
           Plataforma Educativa
         </Link>
 
-        <nav aria-label="Secciones del portal">
+        <nav aria-label="Secciones del portal" className="barra__nav">
           <ul className="barra__enlaces">
             {enlaces.map((enlace) => (
               <li key={enlace.a}>

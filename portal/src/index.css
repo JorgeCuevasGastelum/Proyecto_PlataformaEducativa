@@ -30,10 +30,11 @@ a { color: var(--cian); }
 .disposicion__contenido { flex: 1; width: 100%; max-width: 1080px; margin: 0 auto; padding: 1.6rem 1.2rem 3rem; }
 
 .barra { position: sticky; top: 0; z-index: 10; background: var(--blanco); border-bottom: 1px solid var(--linea); }
-.barra__interior { max-width: 1080px; margin: 0 auto; padding: 0.7rem 1.2rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem; }
+.barra__interior { max-width: 1080px; margin: 0 auto; padding: 0.7rem 1.2rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem; }
 .barra__marca { display: flex; align-items: center; gap: 0.55rem; font-weight: 700; font-size: 1.05rem; color: var(--tinta); text-decoration: none; }
+.barra__marca img { width: 30px; height: 30px; }
 .barra__enlaces { display: flex; flex-wrap: wrap; gap: 0.35rem; list-style: none; margin: 0; padding: 0; }
-.barra__enlace { display: block; padding: 0.4rem 0.75rem; border-radius: 999px; text-decoration: none; color: var(--apagado); font-size: 0.94rem; font-weight: 600; }
+.barra__enlace { display: block; padding: 0.4rem 0.65rem; border-radius: 999px; text-decoration: none; color: var(--apagado); font-size: 0.94rem; font-weight: 600; }
 .barra__enlace:hover { background: var(--fondo); color: var(--tinta); }
 .barra__enlace--activo { background: rgba(31, 168, 224, 0.12); color: var(--cian); }
 .barra__sesion { margin-left: auto; display: flex; align-items: center; gap: 0.7rem; }
@@ -52,7 +53,7 @@ a { color: var(--cian); }
 .pagina__encabezado { margin-bottom: 1.3rem; }
 .pagina__bajada { margin: 0; max-width: 62ch; color: var(--apagado); }
 
-.etiqueta { display: inline-block; align-self: flex-start; padding: 0.14rem 0.6rem; border-radius: 999px; font-size: 0.76rem; font-weight: 700; }
+.etiqueta { display: inline-block; padding: 0.14rem 0.6rem; border-radius: 999px; font-size: 0.76rem; font-weight: 700; }
 .etiqueta--verde { background: rgba(95, 158, 31, 0.12); color: #43730f; }
 .etiqueta--ambar { background: rgba(196, 143, 10, 0.14); color: #8a6407; }
 .etiqueta--rojo { background: rgba(214, 67, 95, 0.12); color: #a8324a; }
@@ -65,6 +66,8 @@ a { color: var(--cian); }
 .aviso--error { background: rgba(214, 67, 95, 0.1); color: #a8324a; }
 .aviso--exito { background: rgba(95, 158, 31, 0.12); color: #43730f; }
 .aviso--info { background: rgba(31, 168, 224, 0.1); color: #14708f; }
+.aviso--advertencia { background: rgba(196, 143, 10, 0.14); color: #8a6407; }
+.aviso--advertencia a { color: inherit; font-weight: 700; }
 
 .formulario { max-width: 400px; margin: 2.4rem auto; padding: 1.8rem; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); box-shadow: var(--sombra); }
 .formulario__acciones { margin-top: 1rem; }
@@ -88,16 +91,24 @@ a { color: var(--cian); }
 .lista { display: grid; gap: 0.7rem; margin: 0; padding: 0; list-style: none; }
 .lista__renglon { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.8rem 1rem; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); }
 .lista__renglon--columna { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+/* Tarjetas que llevan a otra pantalla: se marcan al pasar el mouse. */
+.lista__renglon--enlace { transition: border-color 0.15s, box-shadow 0.15s; }
+.lista__renglon--enlace:hover { border-color: var(--cian); box-shadow: 0 4px 12px rgba(15, 34, 51, 0.08); }
 .lista__renglon > div:first-child { flex: 1; min-width: 0; }
 .lista__titulo { margin: 0; font-weight: 700; color: var(--tinta); text-decoration: none; }
 a.lista__titulo { color: var(--cian); }
 .lista__meta { margin: 0; font-size: 0.88rem; color: var(--apagado); }
+.lista__aviso { margin: 0.5rem 0 0; }
+
+.pago__monto { min-width: 6.5rem; text-align: right; }
+.pago__estado { display: flex; align-items: center; gap: 0.6rem; width: 9.5rem; }
 
 .ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.8rem; margin: 0 0 1.2rem; }
 .ficha dt { font-size: 0.8rem; color: var(--apagado); }
 .ficha dd { margin: 0; font-weight: 700; color: var(--tinta); }
 
-.semana { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; align-items: start; }
+/* La semana en una sola fila, un día por columna (en el teléfono, uno debajo de otro). */
+.semana { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0.8rem; align-items: start; }
 .dia h2 { font-size: 1.05rem; }
 .filtro { max-width: 260px; margin-bottom: 1.2rem; }
 .historial { margin-bottom: 1.6rem; }
@@ -107,8 +118,15 @@ a.lista__titulo { color: var(--cian); }
 .tabla thead th { font-size: 0.8rem; color: var(--apagado); }
 
 @media (max-width: 720px) {
-  .barra__interior { gap: 0.6rem; }
-  .barra__sesion { width: 100%; margin-left: 0; justify-content: space-between; }
+  /* En el teléfono: marca y "Salir" en el primer renglón, el menú abajo y sin el correo. */
+  .barra__interior { gap: 0.5rem 0.6rem; }
+  .barra__sesion { order: 1; }
+  .barra__nav { order: 2; width: 100%; }
+  .barra__usuario { display: none; }
+  .barra__enlace { padding: 0.35rem 0.6rem; font-size: 0.88rem; }
   .lista__renglon { flex-direction: column; align-items: flex-start; }
+  .semana { grid-auto-flow: row; }
+  .pago__monto { min-width: 0; text-align: left; }
+  .pago__estado { width: auto; }
   .campo--calificacion { width: 100%; }
 }

@@ -214,6 +214,31 @@ async function main(): Promise<void> {
     ]);
     return '\n' + lineas.join('\n');
   }, 'exito');
+
+  // CATÁLOGO DEL ADMINISTRADOR
+
+  console.log('\n=== Catalogo del administrador ===');
+
+  await escenario('Crear carrera y su plan', 'Diana registra la carrera de Contaduría y le crea un plan de estudios.', async () => {
+    const carrera = await administracion.registrarCarrera(diana, { clave: 'LCP', nombre: 'Contaduría' });
+    const plan = await administracion.registrarPlanDeEstudios(diana, { clave: 'LCP-2026', carreraId: carrera.id });
+    return `carrera ${carrera.nombre} con el plan ${plan.clave}.`;
+  }, 'exito');
+
+  await escenario('Carrera con clave repetida', 'Diana intenta registrar otra carrera con la clave LCP.', async () => {
+    await administracion.registrarCarrera(diana, { clave: 'LCP', nombre: 'Contabilidad' });
+    return 'carrera registrada';
+  }, 'rechazo');
+
+  await escenario('Materia requisito de sí misma', 'Diana intenta que Programación I sea requisito de Programación I.', async () => {
+    await administracion.agregarPrerrequisito(diana, 1, 1);
+    return 'seriación guardada';
+  }, 'rechazo');
+
+  await escenario('Seriación circular', 'Programación II ya requiere Programación I; Diana intenta que Programación I requiera Programación II.', async () => {
+    await administracion.agregarPrerrequisito(diana, 1, 2);
+    return 'seriación guardada';
+  }, 'rechazo');
 }
 
 main();

@@ -14,6 +14,7 @@ import type {
   Usuario,
 } from '../dominio/entidades.js';
 import type {
+  NuevaCarrera,
   NuevaInscripcion,
   NuevaMateria,
   NuevoAlumno,
@@ -297,6 +298,16 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
 
   async buscarCarreraPorId(id: number): Promise<Carrera | null> {
     return this.carreras.find((c) => c.id === id) ?? null;
+  }
+
+  async buscarCarreraPorClave(clave: string): Promise<Carrera | null> {
+    return this.carreras.find((c) => c.clave === clave) ?? null;
+  }
+
+  async crearCarrera(datos: NuevaCarrera): Promise<Carrera> {
+    const nueva: Carrera = { id: siguienteId(this.carreras), ...datos };
+    this.carreras.push(nueva);
+    return nueva;
   }
 
   async listarPlanesDeEstudio(): Promise<PlanDeEstudios[]> {

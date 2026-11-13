@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -35,5 +35,15 @@ export class MateriasController {
     @Param('prerrequisitoId', ParseIntPipe) prerrequisitoId: number,
   ) {
     return this.administracion.agregarPrerrequisito(sesion, id, prerrequisitoId);
+  }
+
+  @Delete(':id/prerrequisitos/:prerrequisitoId')
+  @Roles('administrador')
+  quitarPrerrequisito(
+    @UsuarioActual() sesion: Sesion,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('prerrequisitoId', ParseIntPipe) prerrequisitoId: number,
+  ) {
+    return this.administracion.quitarPrerrequisito(sesion, id, prerrequisitoId);
   }
 }

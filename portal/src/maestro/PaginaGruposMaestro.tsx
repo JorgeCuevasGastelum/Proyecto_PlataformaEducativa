@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { useGruposMaestro } from "./useGruposMaestro";
 import { Cargando } from "../compartido/componentes/Cargando";
 import { MensajeError } from "../compartido/componentes/MensajeError";
+import { pluralizar } from "../compartido/formato";
 
 export default function PaginaGruposMaestro() {
     const { grupos, cargando, error, reintentar } = useGruposMaestro();
@@ -27,12 +28,12 @@ export default function PaginaGruposMaestro() {
 
             <ul className="lista">
                 {grupos.map((g) => (
-                    <li key={g.grupoId} className="lista__renglon">
+                    <li key={g.grupoId} className="lista__renglon lista__renglon--enlace">
                         <div>
                             <Link to={`/maestro/grupos/${g.grupoId}`} className="lista__titulo">{g.materiaNombre}</Link>
                             <p className="lista__meta">Grupo {g.grupoClave} · {g.periodoClave}</p>
                         </div>
-                        <p className="lista__meta">{g.inscritos} alumno(s)</p>
+                        <p className="lista__meta">{pluralizar(g.inscritos, "alumno", "alumnos")}</p>
                     </li>
                 ))}
             </ul>

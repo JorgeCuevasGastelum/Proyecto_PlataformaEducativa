@@ -80,13 +80,15 @@ export default function PaginaPagos() {
                                         : `Fecha límite: ${fecha(p.fechaLimite)}`}
                                 </p>
                             </div>
-                            <p className="lista__titulo">{dinero(p.monto)}</p>
-                            {estado}
-                            {p.estado === "pendiente" && (
-                                <button className="boton boton--chico" onClick={() => pagar(p)} disabled={ocupado}>
-                                    Pagar
-                                </button>
-                            )}
+                            <p className="lista__titulo pago__monto">{dinero(p.monto)}</p>
+                            <div className="pago__estado">
+                                {estado}
+                                {p.estado === "pendiente" && (
+                                    <button className="boton boton--chico" onClick={() => pagar(p)} disabled={ocupado}>
+                                        Pagar
+                                    </button>
+                                )}
+                            </div>
                         </li>
                     );
                 })}
