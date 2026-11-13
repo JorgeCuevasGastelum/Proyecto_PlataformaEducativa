@@ -4,6 +4,7 @@ import type {
   AlumnoEnLista,
   Aviso,
   BloqueHorario,
+  Carrera,
   ConceptoDePago,
   Grupo,
   Maestro,
@@ -17,7 +18,9 @@ import type {
 import {
   AlumnoInvalidoError,
   AlumnoNoEncontradoError,
+  CarreraInvalidaError,
   CarreraNoEncontradaError,
+  ClaveDeCarreraDuplicadaError,
   ClaveDeMateriaDuplicadaError,
   ClaveDePeriodoDuplicadaError,
   ClaveDePlanDuplicadaError,
@@ -41,6 +44,7 @@ import {
   PeriodoInvalidoError,
   PeriodoNoEncontradoError,
   PlanDeEstudiosNoEncontradoError,
+  SeriacionInvalidaError,
   YaExistePeriodoAbiertoError,
 } from './errores.js';
 import type { GeneradorDeHash } from './generador-de-hash.js';
@@ -54,6 +58,11 @@ interface DatosNuevaMateria {
   descripcion: string;
   creditos: number;
   prerrequisitoIds: number[];
+}
+
+interface DatosNuevaCarrera {
+  clave: string;
+  nombre: string;
 }
 
 interface DatosNuevoPlan {
@@ -203,6 +212,21 @@ export class ServicioAdministracion {
     return actualizado;
   }
 
+  // RN-29
+  async registrarCarrera(sesion: Sesion, datos: DatosNuevaCarrera): Promise<Carrera> {
+    await this.verificarAdministrador(sesion);
+
+    if (!datos.clave || !datos.nombre) {
+      throw new CarreraInvalidaError('debe tener clave y nombre');
+    }
+
+    const existente = await this.repo.buscarCarreraPorClave(datos.clave);
+    if (existente) throw new ClaveDeCarreraDuplicadaError(datos.clave);
+
+    return this.repo.crearCarrera({ clave: datos.clave, nombre: datos.nombre });
+  }
+
+  // RN-29
   async registrarPlanDeEstudios(sesion: Sesion, datos: DatosNuevoPlan): Promise<PlanDeEstudios> {
     await this.verificarAdministrador(sesion);
 
@@ -215,6 +239,7 @@ export class ServicioAdministracion {
     return this.repo.crearPlanDeEstudios({ clave: datos.clave, carreraId: carrera.id, materiaIds: [] });
   }
 
+  // RN-30
   async agregarPrerrequisito(sesion: Sesion, materiaId: number, prerrequisitoId: number): Promise<Materia> {
     await this.verificarAdministrador(sesion);
 
@@ -226,11 +251,55 @@ export class ServicioAdministracion {
 
     if (materia.prerrequisitoIds.includes(prerrequisitoId)) return materia;
 
+    if (materiaId === prerrequisitoId) {
+      throw new SeriacionInvalidaError(`La materia ${materia.nombre} no puede ser requisito de sí misma.`);
+    }
+
+    // Se recorren los requisitos del requisito (y los de esos, etc.).
+    // Si en algún punto aparece la materia original, la seriación sería circular.
+    const porRevisar = [...prerrequisito.prerrequisitoIds];
+    const revisadas: number[] = [];
+    while (porRevisar.length > 0) {
+      const id = porRevisar.pop()!;
+      if (id === materiaId) {
+        throw new SeriacionInvalidaError(
+          `No se puede seriar: ${prerrequisito.nombre} ya requiere (directa o indirectamente) a ${materia.nombre}.`,
+        );
+      }
+      if (revisadas.includes(id)) continue;
+      revisadas.push(id);
+
+      const siguiente = await this.repo.buscarMateriaPorId(id);
+      if (siguiente) porRevisar.push(...siguiente.prerrequisitoIds);
+    }
+
     const actualizada: Materia = { ...materia, prerrequisitoIds: [...materia.prerrequisitoIds, prerrequisitoId] };
     await this.repo.actualizarMateria(actualizada);
     return actualizada;
   }
 
+  // RN-30
+  async quitarPrerrequisito(sesion: Sesion, materiaId: number, prerrequisitoId: number): Promise<Materia> {
+    await this.verificarAdministrador(sesion);
+
+    const materia = await this.repo.buscarMateriaPorId(materiaId);
+    if (!materia) throw new MateriaNoEncontradaError(String(materiaId));
+
+    const prerrequisito = await this.repo.buscarMateriaPorId(prerrequisitoId);
+    if (!prerrequisito) throw new MateriaNoEncontradaError(String(prerrequisitoId));
+
+    // Si no estaba ligada, no hay nada que quitar.
+    if (!materia.prerrequisitoIds.includes(prerrequisitoId)) return materia;
+
+    const actualizada: Materia = {
+      ...materia,
+      prerrequisitoIds: materia.prerrequisitoIds.filter((id) => id !== prerrequisitoId),
+    };
+    await this.repo.actualizarMateria(actualizada);
+    return actualizada;
+  }
+
+  // RN-31
   async actualizarGrupo(sesion: Sesion, grupoId: number, cambios: CambiosDeGrupo): Promise<Grupo> {
     await this.verificarAdministrador(sesion);
 

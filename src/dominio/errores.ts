@@ -284,9 +284,27 @@ export class CarreraNoEncontradaError extends ErrorDeDominio {
   }
 }
 
+export class CarreraInvalidaError extends ErrorDeDominio {
+  constructor(motivo: string) {
+    super(`Carrera inválida: ${motivo}.`);
+  }
+}
+
+export class ClaveDeCarreraDuplicadaError extends ErrorDeDominio {
+  constructor(clave: string) {
+    super(`Ya existe una carrera con la clave ${clave}.`);
+  }
+}
+
 export class ClaveDePlanDuplicadaError extends ErrorDeDominio {
   constructor(clave: string) {
     super(`Ya existe un plan de estudios con la clave ${clave}.`);
+  }
+}
+
+export class SeriacionInvalidaError extends ErrorDeDominio {
+  constructor(mensaje: string) {
+    super(mensaje);
   }
 }
 

@@ -7,6 +7,7 @@ import { MensajeError } from "../compartido/componentes/MensajeError";
 import { usePeriodos } from "../compartido/usePeriodos";
 import { periodoAbierto } from "../compartido/servicios/periodos";
 import { mensajeDeError } from "../compartido/servicios/api";
+import { pluralizar } from "../compartido/formato";
 
 interface Aviso {
     tipo: "exito" | "error";
@@ -52,7 +53,7 @@ export default function PaginaMaterias() {
                 <h1>Mis materias</h1>
                 <p className="pagina__bajada">
                     {abierto
-                        ? `${materias.length} materia(s) en ${abierto.clave}: ${creditos} de ${abierto.creditosMaximos} créditos`
+                        ? `${pluralizar(materias.length, "materia", "materias")} en ${abierto.clave}: ${creditos} de ${abierto.creditosMaximos} créditos`
                         : "No hay una carga académica abierta"}
                 </p>
             </section>

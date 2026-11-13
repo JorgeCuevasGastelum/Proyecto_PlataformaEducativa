@@ -217,6 +217,7 @@ export class ServicioAlumno {
     return this.repo.listarPagosDeAlumno(alumno.id);
   }
 
+  // RN-28
   async pagarCargo(sesion: Sesion, pagoId: number): Promise<Pago> {
     const alumno = await this.obtenerAlumno(sesion);
 

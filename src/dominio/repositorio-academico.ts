@@ -14,6 +14,7 @@ import type {
 } from './entidades.js';
 
 export type NuevoUsuario = Omit<Usuario, 'id'>;
+export type NuevaCarrera = Omit<Carrera, 'id'>;
 export type NuevoPlanDeEstudios = Omit<PlanDeEstudios, 'id'>;
 export type NuevoAlumno = Omit<Alumno, 'id'>;
 export type NuevoMaestro = Omit<Maestro, 'id'>;
@@ -53,6 +54,10 @@ export interface RepositorioAcademico {
   listarCarreras(): Promise<Carrera[]>;
 
   buscarCarreraPorId(id: number): Promise<Carrera | null>;
+
+  buscarCarreraPorClave(clave: string): Promise<Carrera | null>;
+
+  crearCarrera(datos: NuevaCarrera): Promise<Carrera>;
 
   listarPlanesDeEstudio(): Promise<PlanDeEstudios[]>;
 

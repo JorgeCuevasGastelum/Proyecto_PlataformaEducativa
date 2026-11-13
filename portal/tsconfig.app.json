@@ -16,11 +16,6 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Tipos compartidos con el servicio (solo import type) */
-    "paths": {
-      "@servicio/*": ["../src/*"]
-    },
-
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,

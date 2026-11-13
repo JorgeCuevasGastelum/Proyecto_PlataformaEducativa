@@ -5,6 +5,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import type { Sesion } from '../dominio/entidades';
 import { ServicioAdministracion } from '../dominio/servicio-administracion';
 import { ServicioCatalogo } from '../dominio/servicio-catalogo';
+import { RegistrarCarreraDto } from './dto/registrar-carrera.dto';
 import { RegistrarPlanDto } from './dto/registrar-plan.dto';
 
 @Controller()
@@ -18,6 +19,13 @@ export class PlanesController {
   @Get('carreras')
   listarCarreras() {
     return this.catalogo.listarCarreras();
+  }
+
+  @Post('carreras')
+  @HttpCode(201)
+  @Roles('administrador')
+  registrarCarrera(@UsuarioActual() sesion: Sesion, @Body() dto: RegistrarCarreraDto) {
+    return this.administracion.registrarCarrera(sesion, dto);
   }
 
   @Get('planes')

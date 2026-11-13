@@ -107,19 +107,25 @@ Sin sesión solo se puede usar `POST /auth/login`.
 | GET | /alumnos/yo/horario | alumno | Mi horario ordenado por día y hora |
 | GET | /alumnos/yo/historial | alumno | Mi historial con calificaciones, por período |
 | GET | /alumnos/yo/pagos | alumno | Mi estado de cuenta |
+| PATCH | /alumnos/yo/pagos/:id | alumno | Pagar uno de mis cargos |
 | POST | /maestros | administrador | Registrar maestro y su cuenta |
 | GET | /maestros | administrador | Listar maestros |
 | GET | /maestros/yo/grupos | maestro | Mis grupos y cuántos inscritos tienen |
 | GET | /carreras | con sesión | Listar carreras |
+| POST | /carreras | administrador | Registrar carrera |
 | GET | /planes | con sesión | Listar planes de estudio con sus materias |
+| POST | /planes | administrador | Registrar plan de estudios de una carrera |
 | PUT | /planes/:id/materias/:materiaId | administrador | Agregar una materia a un plan |
 | GET | /materias | con sesión | Listar materias con sus prerrequisitos |
 | POST | /materias | administrador | Registrar materia |
+| PUT | /materias/:id/prerrequisitos/:prerrequisitoId | administrador | Ligar un prerrequisito (seriación) |
+| DELETE | /materias/:id/prerrequisitos/:prerrequisitoId | administrador | Quitar un prerrequisito |
 | GET | /periodos | con sesión | Listar períodos |
 | POST | /periodos | administrador | Crear período |
 | PATCH | /periodos/:id | administrador | Abrir o cerrar la carga (`{ "cargaAbierta": true }`) |
 | GET | /grupos | con sesión | Grupos del período abierto con lugares disponibles (`?periodoId=` para otro) |
 | POST | /grupos | administrador | Abrir grupo con maestro, cupo y horario |
+| PATCH | /grupos/:id | administrador | Cambiar el cupo o el maestro de un grupo |
 | GET | /grupos/:id/ocupacion | administrador | Lugares ocupados y disponibles |
 | GET | /grupos/:id/alumnos | administrador, maestro | Alumnos inscritos (el maestro solo de sus grupos) |
 | PUT | /grupos/:id/calificaciones | maestro | Capturar calificaciones de mi grupo |
@@ -181,7 +187,7 @@ El programa del avance 1 sigue funcionando sin base de datos:
 npm run escenarios
 ```
 
-Recorre 23 escenarios (acceso, carga académica, plan de estudios, pagos, horario, bajas e historial) usando el repositorio en memoria.
+Recorre 27 escenarios (acceso, carga académica, plan de estudios, pagos, horario, bajas, historial y catálogo del administrador) usando el repositorio en memoria.
 
 ## Modelo de datos
 
@@ -237,6 +243,10 @@ Las reglas RN-01 a RN-13 son las del documento del avance 1; las marcadas como *
 | RN-25 | Un maestro no puede tener dos grupos a la misma hora en un período. | `EmpalmeDeMaestroError` |
 | RN-26 | Un cargo debe tener monto mayor a cero, y un pago no se puede registrar dos veces. | `PagoInvalidoError`, `PagoYaRegistradoError`, `PagoNoEncontradoError` |
 | RN-27 | No se puede crear un período sin clave, con tope de créditos de cero o menos, con la fecha de cierre antes de la de apertura, o con una clave ya usada. El período nace con la carga cerrada. | `PeriodoInvalidoError`, `ClaveDePeriodoDuplicadaError` |
+| RN-28 | El alumno solo puede pagar sus propios cargos, y un cargo ya pagado no se paga otra vez. | `PagoNoEncontradoError`, `PagoYaRegistradoError` |
+| RN-29 | Una carrera necesita clave y nombre, con una clave que no esté usada. Un plan de estudios necesita una carrera existente y una clave que no esté usada. | `CarreraInvalidaError`, `ClaveDeCarreraDuplicadaError`, `CarreraNoEncontradaError`, `ClaveDePlanDuplicadaError` |
+| RN-30 | Al ligar o quitar un prerrequisito, las dos materias deben existir. Una materia no puede ser requisito de sí misma, ni se puede armar una seriación circular (por ejemplo, que A pida B y B pida A). | `MateriaNoEncontradaError`, `SeriacionInvalidaError` |
+| RN-31 | Al cambiar un grupo, el cupo debe ser mayor a cero y no menor a los alumnos ya inscritos, y el nuevo maestro debe existir y no tener otro grupo a la misma hora. | `GrupoInvalidoError`, `CupoMenorAInscritosError`, `MaestroNoEncontradoError`, `EmpalmeDeMaestroError` |
 
 ## Cambios respecto al avance 1 (retroalimentación)
 

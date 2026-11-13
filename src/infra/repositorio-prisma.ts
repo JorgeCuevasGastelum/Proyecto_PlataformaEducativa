@@ -14,6 +14,7 @@ import type {
   Usuario,
 } from '../dominio/entidades';
 import type {
+  NuevaCarrera,
   NuevaInscripcion,
   NuevaMateria,
   NuevoAlumno,
@@ -146,6 +147,14 @@ export class RepositorioPrisma implements RepositorioAcademico {
 
   buscarCarreraPorId(id: number): Promise<Carrera | null> {
     return this.prisma.carrera.findUnique({ where: { id } });
+  }
+
+  buscarCarreraPorClave(clave: string): Promise<Carrera | null> {
+    return this.prisma.carrera.findUnique({ where: { clave } });
+  }
+
+  crearCarrera(datos: NuevaCarrera): Promise<Carrera> {
+    return this.prisma.carrera.create({ data: datos });
   }
 
   async listarPlanesDeEstudio(): Promise<PlanDeEstudios[]> {

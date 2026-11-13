@@ -83,4 +83,4 @@ Todo lo que se comunica con el servicio pasa por `compartido/servicios/api.ts`.
 
 ### Tipos compartidos con el servicio
 
-Los tipos de los datos que viajan por la red no se copian: `compartido/tipos.ts` los importa con `import type` desde `src/dominio/entidades.ts` del servicio (alias `@servicio`, definido en `tsconfig.app.json`). Solo se adaptan las fechas, que en JSON llegan como texto. Si el servicio cambia un campo, el portal deja de compilar hasta que se ajuste. Como son importaciones de tipo, el portal no incluye código del servicio y sigue siendo una aplicación independiente.
+Los tipos de los datos que viajan por la red no se copian: `compartido/tipos.ts` los importa con `import type` desde `src/dominio/entidades.ts` del servicio. Solo se adaptan las fechas, que en JSON llegan como texto: en `PeriodoEscolar`, `Inscripcion`, `Pago` y `Aviso` se usa `Omit` para quitar las fechas y se vuelven a declarar como `string`. Si el servicio cambia un campo, el portal deja de compilar hasta que se ajuste. Como son importaciones de tipo, el portal no incluye código del servicio y sigue siendo una aplicación independiente.
