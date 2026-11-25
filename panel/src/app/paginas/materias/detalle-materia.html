@@ -1,0 +1,97 @@
+@if (noExiste()) {
+  <app-no-encontrado />
+} @else if (cargando()) {
+  <p class="cargando">Cargando materia…</p>
+} @else if (errorCarga(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="cargar()">Reintentar</button>
+  </div>
+} @else if (materia(); as m) {
+  <a routerLink="/materias">← Volver a materias</a>
+
+  <div class="encabezado" style="margin-top: 0.6rem">
+    <div>
+      <h1>{{ m.clave }} · {{ m.nombre }}</h1>
+      <p>{{ m.descripcion }}</p>
+    </div>
+    <div class="acciones">
+      <a class="boton boton--secundario" [routerLink]="['/materias', m.id, 'editar']">Editar</a>
+      <button class="boton boton--peligro" (click)="eliminar()" [disabled]="ocupado()">Eliminar</button>
+    </div>
+  </div>
+
+  @if (mensaje(); as aviso) {
+    <div class="aviso aviso--{{ aviso.tipo }}">{{ aviso.texto }}</div>
+  }
+
+  <div class="tarjeta" style="display: grid; gap: 0.35rem; margin-bottom: 1rem">
+    <div class="dato"><span class="dato__clave">Créditos</span><span class="dato__valor">{{ m.creditos }}</span></div>
+    <div class="dato">
+      <span class="dato__clave">En los planes</span>
+      <span class="dato__valor">
+        @for (p of enPlanes(); track p.id; let ultimo = $last) {
+          {{ p.clave }}{{ ultimo ? '' : ', ' }}
+        } @empty {
+          Ninguno
+        }
+      </span>
+    </div>
+    <div class="dato">
+      <span class="dato__clave">Es requisito de</span>
+      <span class="dato__valor">
+        @for (r of requeridaPor(); track r.id; let ultimo = $last) {
+          <a [routerLink]="['/materias', r.id]">{{ r.clave }}</a>{{ ultimo ? '' : ', ' }}
+        } @empty {
+          Ninguna
+        }
+      </span>
+    </div>
+  </div>
+
+  <h2>Prerrequisitos</h2>
+  <p class="dato__clave" style="margin-top: 0">Materias que el alumno debe haber aprobado antes de inscribir esta.</p>
+
+  <div class="buscador">
+    <select aria-label="Materia a agregar como prerrequisito" [value]="elegido()" (change)="elegir($event)">
+      <option value="">Elige una materia…</option>
+      @for (c of candidatas(); track c.id) {
+        <option [value]="c.id">{{ c.clave }} - {{ c.nombre }}</option>
+      }
+    </select>
+    <button class="boton boton--chico" (click)="agregarPrerrequisito()" [disabled]="!elegido() || ocupado()">
+      Agregar prerrequisito
+    </button>
+  </div>
+
+  @if (prerrequisitos().length === 0) {
+    <div class="tarjeta vacio">
+      <h2>Sin prerrequisitos</h2>
+      <p>Cualquier alumno de un plan que la incluya puede inscribirla.</p>
+    </div>
+  } @else {
+    <div class="tabla-env">
+      <table class="datos">
+        <thead>
+          <tr>
+            <th>Clave</th>
+            <th>Nombre</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of prerrequisitos(); track p.id) {
+            <tr>
+              <td><a [routerLink]="['/materias', p.id]">{{ p.clave }}</a></td>
+              <td>{{ p.nombre }}</td>
+              <td class="numero">
+                <button class="boton boton--secundario boton--chico" (click)="quitarPrerrequisito(p.id)"
+                        [disabled]="ocupado()">Quitar</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

@@ -1,0 +1,175 @@
+<div class="encabezado">
+  <div>
+    <h1>Carreras y planes</h1>
+    <p>Qué materias forman cada plan. Es lo que define la oferta que ve cada alumno en el portal.</p>
+  </div>
+</div>
+
+@if (mensaje(); as m) {
+  <div class="aviso aviso--{{ m.tipo }}" role="status">{{ m.texto }}</div>
+}
+
+@if (lista.error(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="lista.recargar()">Reintentar</button>
+  </div>
+} @else if (lista.cargando() && lista.carreras().length === 0) {
+  <p class="cargando">Cargando carreras y planes…</p>
+} @else {
+  <h2>Carreras</h2>
+  <div class="tabla-env" style="margin-bottom: 0.8rem">
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Clave</th>
+          <th>Nombre</th>
+          <th class="numero">Planes</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of lista.carreras(); track c.id) {
+          <tr>
+            <td>{{ c.clave }}</td>
+            <td>{{ c.nombre }}</td>
+            <td class="numero">{{ planesPorCarrera().get(c.id) ?? 0 }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="3">Todavía no hay carreras. Da de alta la primera aquí abajo.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <form class="tarjeta formulario" style="max-width: none; margin-bottom: 1.5rem" [formGroup]="formCarrera"
+        (ngSubmit)="crearCarrera()" novalidate>
+    <h3 style="margin-top: 0">Nueva carrera</h3>
+    <div class="fila" style="grid-template-columns: 160px 1fr auto">
+      <div class="campo">
+        <label for="carrera-clave">Clave</label>
+        <input id="carrera-clave" formControlName="clave" autocomplete="off" style="text-transform: uppercase" />
+        @if (formCarrera.controls.clave.touched && formCarrera.controls.clave.hasError('required')) {
+          <span class="error">Escribe la clave.</span>
+        }
+        @if (formCarrera.controls.clave.hasError('maxlength')) {
+          <span class="error">Máximo 10 caracteres.</span>
+        }
+      </div>
+      <div class="campo">
+        <label for="carrera-nombre">Nombre</label>
+        <input id="carrera-nombre" formControlName="nombre" />
+        @if (formCarrera.controls.nombre.touched && formCarrera.controls.nombre.hasError('required')) {
+          <span class="error">Escribe el nombre de la carrera.</span>
+        }
+        @if (formCarrera.controls.nombre.hasError('maxlength')) {
+          <span class="error">Máximo 120 caracteres.</span>
+        }
+      </div>
+      <div class="campo">
+        <label>&nbsp;</label>
+        <button class="boton" type="submit" [disabled]="ocupado()">Nueva carrera</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="encabezado">
+    <h2 style="margin: 0">Planes de estudio</h2>
+    <div class="buscador" style="margin: 0">
+      <select aria-label="Filtrar planes por carrera" (change)="elegirCarrera($event)">
+        <option value="0">Todas las carreras</option>
+        @for (c of lista.carreras(); track c.id) {
+          <option [value]="c.id">{{ c.clave }} - {{ c.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <form class="tarjeta formulario" style="max-width: none; margin-bottom: 1rem" [formGroup]="formPlan"
+        (ngSubmit)="crearPlan()" novalidate>
+    <h3 style="margin-top: 0">Nuevo plan</h3>
+    <div class="fila" style="grid-template-columns: 200px 1fr auto">
+      <div class="campo">
+        <label for="plan-clave">Clave</label>
+        <input id="plan-clave" formControlName="clave" placeholder="ISW-2026" autocomplete="off"
+               style="text-transform: uppercase" />
+        @if (formPlan.controls.clave.touched && formPlan.controls.clave.hasError('required')) {
+          <span class="error">Escribe la clave del plan.</span>
+        }
+        @if (formPlan.controls.clave.hasError('maxlength')) {
+          <span class="error">Máximo 20 caracteres.</span>
+        }
+      </div>
+      <div class="campo">
+        <label for="plan-carrera">Carrera</label>
+        <select id="plan-carrera" formControlName="carreraId">
+          <option value="">Elige la carrera</option>
+          @for (c of lista.carreras(); track c.id) {
+            <option [value]="c.id">{{ c.clave }} - {{ c.nombre }}</option>
+          }
+        </select>
+        @if (formPlan.controls.carreraId.touched && formPlan.controls.carreraId.hasError('required')) {
+          <span class="error">Elige a qué carrera pertenece el plan.</span>
+        }
+      </div>
+      <div class="campo">
+        <label>&nbsp;</label>
+        <button class="boton" type="submit" [disabled]="ocupado()">Crear plan</button>
+      </div>
+    </div>
+  </form>
+
+  @for (fila of planes(); track fila.plan.id) {
+    <section class="tarjeta" style="margin-bottom: 1rem">
+      <div class="encabezado" style="margin-bottom: 0.6rem">
+        <div>
+          <h3 style="margin: 0">{{ fila.plan.clave }}</h3>
+          <p style="margin: 0">{{ fila.carrera }} · {{ fila.materias.length }} materias · {{ fila.creditos }} créditos</p>
+        </div>
+        <div class="buscador" style="margin: 0">
+          <select #nueva [attr.aria-label]="'Materia a agregar al plan ' + fila.plan.clave">
+            <option value="">Agregar materia…</option>
+            @for (m of fila.faltantes; track m.id) {
+              <option [value]="m.id">{{ m.clave }} - {{ m.nombre }}</option>
+            }
+          </select>
+          <button class="boton boton--chico" (click)="agregarMateria(fila, nueva)" [disabled]="ocupado()">Agregar</button>
+        </div>
+      </div>
+
+      @if (fila.materias.length === 0) {
+        <p class="dato__clave" style="margin: 0">Este plan aún no tiene materias. Sus alumnos no verán oferta.</p>
+      } @else {
+        <div class="tabla-env">
+          <table class="datos">
+            <thead>
+              <tr>
+                <th>Clave</th>
+                <th>Materia</th>
+                <th class="numero">Créditos</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of fila.materias; track m.id) {
+                <tr>
+                  <td><a [routerLink]="['/materias', m.id]">{{ m.clave }}</a></td>
+                  <td>{{ m.nombre }}</td>
+                  <td class="numero">{{ m.creditos }}</td>
+                  <td class="numero">
+                    <button class="boton boton--secundario boton--chico" (click)="quitarMateria(fila, m)"
+                            [disabled]="ocupado()">Quitar</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  } @empty {
+    <div class="tarjeta vacio">
+      <h2>No hay planes{{ filtroCarrera() ? ' para esa carrera' : '' }}</h2>
+      <p>Crea un plan arriba y luego agrégale sus materias.</p>
+    </div>
+  }
+}
