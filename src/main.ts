@@ -30,7 +30,7 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
 
-  const origenes = (process.env.ORIGENES_PERMITIDOS ?? 'http://localhost:5173').split(',').map((o) => o.trim());
+  const origenes = (process.env.ORIGENES_PERMITIDOS ?? 'http://localhost:5173,http://localhost:4200').split(',').map((o) => o.trim());
   app.enableCors({
     origin: origenes,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],

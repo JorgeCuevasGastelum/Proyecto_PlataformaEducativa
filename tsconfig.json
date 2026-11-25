@@ -19,5 +19,5 @@
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", "dist", "portal"]
+  "exclude": ["node_modules", "dist", "portal", "panel"]
 }
