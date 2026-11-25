@@ -84,6 +84,12 @@ export class MateriaNoEncontradaError extends ErrorDeDominio {
   }
 }
 
+export class MateriaEnUsoError extends ErrorDeDominio {
+  constructor(mensaje: string) {
+    super(mensaje);
+  }
+}
+
 export class ClaveDeMateriaDuplicadaError extends ErrorDeDominio {
   constructor(clave: string) {
     super(`Ya existe una materia con la clave ${clave}.`);

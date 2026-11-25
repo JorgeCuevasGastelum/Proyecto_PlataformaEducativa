@@ -356,6 +356,15 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     if (indice !== -1) this.materias[indice] = materia;
   }
 
+  async contarGruposDeMateria(materiaId: number): Promise<number> {
+    return this.grupos.filter((g) => g.materiaId === materiaId).length;
+  }
+
+  async eliminarMateria(id: number): Promise<void> {
+    const indice = this.materias.findIndex((m) => m.id === id);
+    if (indice !== -1) this.materias.splice(indice, 1);
+  }
+
   async buscarGrupoPorId(id: number): Promise<Grupo | null> {
     return this.grupos.find((g) => g.id === id) ?? null;
   }

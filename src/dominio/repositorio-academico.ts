@@ -79,6 +79,10 @@ export interface RepositorioAcademico {
 
   actualizarMateria(materia: Materia): Promise<void>;
 
+  contarGruposDeMateria(materiaId: number): Promise<number>;
+
+  eliminarMateria(id: number): Promise<void>;
+
   buscarGrupoPorId(id: number): Promise<Grupo | null>;
 
   listarGruposDeMateriaEnPeriodo(materiaId: number, periodoId: number): Promise<Grupo[]>;

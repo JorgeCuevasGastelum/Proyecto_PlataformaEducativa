@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -48,5 +48,15 @@ export class PlanesController {
     @Param('materiaId', ParseIntPipe) materiaId: number,
   ) {
     return this.administracion.agregarMateriaAPlan(sesion, id, materiaId);
+  }
+
+  @Delete('planes/:id/materias/:materiaId')
+  @Roles('administrador')
+  quitarMateria(
+    @UsuarioActual() sesion: Sesion,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('materiaId', ParseIntPipe) materiaId: number,
+  ) {
+    return this.administracion.quitarMateriaDePlan(sesion, id, materiaId);
   }
 }

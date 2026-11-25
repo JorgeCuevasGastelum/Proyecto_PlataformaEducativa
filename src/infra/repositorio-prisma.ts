@@ -213,11 +213,28 @@ export class RepositorioPrisma implements RepositorioAcademico {
   }
 
   async actualizarMateria(materia: Materia): Promise<void> {
+    // Primero los datos de la materia; si no, editar nombre o créditos no se guardaría en MySQL.
     await this.prisma.$transaction([
+      this.prisma.materia.update({
+        where: { id: materia.id },
+        data: { nombre: materia.nombre, descripcion: materia.descripcion, creditos: materia.creditos },
+      }),
       this.prisma.prerrequisito.deleteMany({ where: { materiaId: materia.id } }),
       this.prisma.prerrequisito.createMany({
         data: materia.prerrequisitoIds.map((prerrequisitoId) => ({ materiaId: materia.id, prerrequisitoId })),
       }),
+    ]);
+  }
+
+  contarGruposDeMateria(materiaId: number): Promise<number> {
+    return this.prisma.grupo.count({ where: { materiaId } });
+  }
+
+  async eliminarMateria(id: number): Promise<void> {
+    // Sus prerrequisitos apuntan a ella, así que se borran antes que la materia.
+    await this.prisma.$transaction([
+      this.prisma.prerrequisito.deleteMany({ where: { materiaId: id } }),
+      this.prisma.materia.delete({ where: { id } }),
     ]);
   }
 
