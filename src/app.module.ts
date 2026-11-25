@@ -12,6 +12,7 @@ import { PagosModule } from './pagos/pagos.module';
 import { PeriodosModule } from './periodos/periodos.module';
 import { PlanesModule } from './planes/planes.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ResumenModule } from './resumen/resumen.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PrismaModule } from './prisma/prisma.module';
     InscripcionesModule,
     PagosModule,
     AvisosModule,
+    ResumenModule,
   ],
 })
 export class AppModule implements NestModule {

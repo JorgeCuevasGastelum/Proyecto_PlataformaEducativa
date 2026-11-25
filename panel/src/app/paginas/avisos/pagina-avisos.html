@@ -1,0 +1,52 @@
+<div class="encabezado">
+  <div>
+    <h1>Avisos</h1>
+    <p>Lo que ven los alumnos en la sección de avisos del portal.</p>
+  </div>
+  <a class="boton" routerLink="/avisos/nuevo">Nuevo aviso</a>
+</div>
+
+@if (mensaje(); as m) {
+  <div class="aviso aviso--{{ m.tipo }}">{{ m.texto }}</div>
+}
+
+<div class="buscador">
+  <select aria-label="Período" (change)="elegirPeriodo($event)">
+    @for (p of lista.listaPeriodos(); track p.id) {
+      <option [value]="p.id" [selected]="p.id === lista.periodoElegido()">{{ p.clave }}{{ p.habilitado ? ' (carga abierta)' : '' }}</option>
+    }
+  </select>
+  <input type="search" placeholder="Buscar en título o contenido" aria-label="Buscar avisos"
+         [value]="lista.texto()" (input)="escribir($event)" />
+</div>
+
+@if (lista.error(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="lista.recargar()">Reintentar</button>
+  </div>
+} @else if (lista.cargando() && lista.visibles().length === 0) {
+  <p class="cargando">Cargando avisos…</p>
+} @else if (lista.visibles().length === 0) {
+  <div class="tarjeta vacio">
+    <h2>No hay avisos{{ lista.texto() ? ' con esa búsqueda' : ' en este período' }}</h2>
+    <p>Los alumnos de este período no tienen avisos que leer.</p>
+    <a class="boton" routerLink="/avisos/nuevo">Publicar un aviso</a>
+  </div>
+} @else {
+  <ul class="lista-avisos">
+    @for (a of lista.visibles(); track a.id) {
+      <li>
+        <div>
+          <h3>{{ a.titulo }}</h3>
+          <span class="fecha">Publicado el {{ fecha(a.fechaPublicacion) }}</span>
+        </div>
+        <div class="acciones">
+          <a class="boton boton--secundario boton--chico" [routerLink]="['/avisos', a.id, 'editar']">Editar</a>
+          <button class="boton boton--peligro boton--chico" (click)="eliminar(a)" [disabled]="ocupado()">Borrar</button>
+        </div>
+        <p style="grid-column: 1 / -1">{{ a.contenido }}</p>
+      </li>
+    }
+  </ul>
+}

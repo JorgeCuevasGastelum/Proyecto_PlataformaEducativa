@@ -1,0 +1,90 @@
+<div class="encabezado">
+  <div>
+    <h1>Pagos</h1>
+    <p>Cargos de inscripción y colegiatura de todos los alumnos.</p>
+  </div>
+  <a class="boton" routerLink="/pagos/nuevo">Registrar cargo</a>
+</div>
+
+@if (aviso(); as a) {
+  <div class="aviso aviso--{{ a.tipo }}">{{ a.texto }}</div>
+}
+
+<div class="buscador">
+  <input type="search" placeholder="Buscar por alumno o matrícula" aria-label="Buscar por alumno o matrícula"
+         [value]="lista.texto()" (input)="escribir($event)" />
+  <select aria-label="Filtrar por estado" [value]="lista.filtro()" (change)="cambiarFiltro($event)">
+    <option value="todos">Todos</option>
+    <option value="pendientes">Pendientes</option>
+    <option value="vencidos">Vencidos</option>
+    <option value="pagados">Pagados</option>
+  </select>
+  @if (!lista.cargando() && !lista.error()) {
+    <span class="buscador__estado">
+      {{ lista.visibles().length }} pagos · {{ dinero(lista.totalPendiente()) }} por cobrar
+    </span>
+  }
+</div>
+
+@if (lista.error(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="lista.recargar()">Reintentar</button>
+  </div>
+} @else if (lista.cargando() && lista.visibles().length === 0) {
+  <p class="cargando">Cargando pagos…</p>
+} @else if (lista.visibles().length === 0) {
+  <div class="tarjeta vacio">
+    <h2>No hay pagos con ese filtro</h2>
+    <p>Prueba con otro estado o borra la búsqueda.</p>
+  </div>
+} @else {
+  <div class="tabla-env">
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Alumno</th>
+          <th>Período</th>
+          <th>Concepto</th>
+          <th class="numero">Monto</th>
+          <th>Fecha límite</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of lista.visibles(); track r.pago.id) {
+          <tr [class.fila--alerta]="r.vencido">
+            <td>
+              {{ r.alumno }}
+              <div class="dato__clave">{{ r.matricula }}</div>
+            </td>
+            <td>{{ r.periodo }}</td>
+            <td>{{ r.pago.concepto === 'inscripcion' ? 'Inscripción' : 'Colegiatura' }}</td>
+            <td class="numero">{{ dinero(r.pago.monto) }}</td>
+            <td>{{ fecha(r.pago.fechaLimite) }}</td>
+            <td>
+              @if (r.pago.estado === 'pagado') {
+                <span class="etiqueta etiqueta--verde">Pagado</span>
+              } @else if (r.vencido) {
+                <span class="etiqueta etiqueta--rojo">Vencido</span>
+              } @else {
+                <span class="etiqueta etiqueta--ambar">Pendiente</span>
+              }
+            </td>
+            <td>
+              @if (r.pago.estado === 'pendiente') {
+                <button class="boton boton--secundario boton--chico" (click)="marcarPagado(r)"
+                        [disabled]="ocupado() !== null">
+                  {{ ocupado() === r.pago.id ? 'Guardando…' : 'Marcar pagado' }}
+                </button>
+              } @else if (r.pago.fechaPago) {
+                <span class="dato__clave">{{ fecha(r.pago.fechaPago) }}</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

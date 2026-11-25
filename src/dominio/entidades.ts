@@ -228,3 +228,21 @@ export interface CapturaDeCalificacion {
   inscripcionId: number;
   calificacion: number;
 }
+
+// Lo que muestra el tablero del panel administrativo.
+export interface OcupacionDeGrupo {
+  grupoId: number;
+  materiaNombre: string;
+  grupoClave: string;
+  inscritos: number;
+  cupoMaximo: number;
+}
+
+export interface ResumenDelPanel {
+  periodoAbierto: string | null;
+  totalAlumnos: number;
+  totalMaestros: number;
+  pagosPendientes: number;
+  pagosVencidos: number;
+  grupos: OcupacionDeGrupo[];
+}

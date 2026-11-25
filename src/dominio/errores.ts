@@ -266,6 +266,12 @@ export class PagoNoEncontradoError extends ErrorDeDominio {
   }
 }
 
+export class AvisoNoEncontradoError extends ErrorDeDominio {
+  constructor(avisoId: string) {
+    super(`No existe el aviso ${avisoId}.`);
+  }
+}
+
 export class PagoYaRegistradoError extends ErrorDeDominio {
   constructor(pagoId: string) {
     super(`El pago ${pagoId} ya estaba registrado como pagado.`);

@@ -12,9 +12,11 @@ import type {
   GrupoDeCatalogo,
   Maestro,
   Materia,
+  OcupacionDeGrupo,
   Pago as PagoDelServicio,
   PeriodoEscolar as PeriodoDelServicio,
   PlanDeEstudios,
+  ResumenDelPanel,
 } from '../../../../src/dominio/entidades';
 
 export type {
@@ -28,7 +30,9 @@ export type {
   GrupoDeCatalogo,
   Maestro,
   Materia,
+  OcupacionDeGrupo,
   PlanDeEstudios,
+  ResumenDelPanel,
 };
 
 // Por JSON las fechas llegan como texto.

@@ -1,0 +1,102 @@
+<div class="encabezado">
+  <div>
+    <h1>Tablero</h1>
+    <p>Cómo va la carga académica y quién tiene pagos pendientes.</p>
+  </div>
+  <button class="boton boton--secundario boton--chico" (click)="recargar()" [disabled]="cargando()">Actualizar</button>
+</div>
+
+@if (error(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="recargar()">Reintentar</button>
+  </div>
+} @else if (cargando() && !resumen()) {
+  <p class="cargando">Cargando el resumen…</p>
+} @else if (resumen(); as r) {
+  <div class="resumen">
+    <div class="resumen__dato">
+      <span class="resumen__numero">{{ r.periodoAbierto ?? '—' }}</span>
+      <span class="resumen__texto">{{ r.periodoAbierto ? 'Carga académica abierta' : 'Sin carga abierta' }}</span>
+    </div>
+    <a class="resumen__dato" routerLink="/alumnos">
+      <span class="resumen__numero">{{ r.totalAlumnos }}</span>
+      <span class="resumen__texto">Alumnos registrados</span>
+    </a>
+    <a class="resumen__dato" routerLink="/maestros">
+      <span class="resumen__numero">{{ r.totalMaestros }}</span>
+      <span class="resumen__texto">Maestros registrados</span>
+    </a>
+    <a class="resumen__dato" routerLink="/pagos">
+      <span class="resumen__numero">{{ r.pagosPendientes }}</span>
+      <span class="resumen__texto">Pagos pendientes</span>
+    </a>
+    <a class="resumen__dato" [class.resumen__dato--alerta]="r.pagosVencidos > 0"
+       routerLink="/pagos" [queryParams]="{ estado: 'vencidos' }">
+      <span class="resumen__numero">{{ r.pagosVencidos }}</span>
+      <span class="resumen__texto">Pagos vencidos (no pueden inscribirse)</span>
+    </a>
+  </div>
+
+  <div class="encabezado">
+    <div>
+      <h2>Ocupación de grupos{{ r.periodoAbierto ? ' · ' + r.periodoAbierto : '' }}</h2>
+      @if (grupos().length > 0) {
+        <p>{{ grupos().length }} grupos, {{ gruposLlenos() }} sin lugares. Los más llenos van primero.</p>
+      }
+    </div>
+  </div>
+
+  @if (!r.periodoAbierto) {
+    <div class="tarjeta vacio">
+      <h2>No hay carga académica abierta</h2>
+      <p>Cuando se abra la carga de un período, aquí se verá cómo se llenan sus grupos.</p>
+      <a class="boton" routerLink="/periodos">Ir a períodos</a>
+    </div>
+  } @else if (grupos().length === 0) {
+    <div class="tarjeta vacio">
+      <h2>El período {{ r.periodoAbierto }} no tiene grupos</h2>
+      <p>Los alumnos no van a poder inscribirse hasta que se abran grupos.</p>
+      <a class="boton" routerLink="/grupos">Ir a grupos</a>
+    </div>
+  } @else {
+    <div class="tabla-env">
+      <table class="datos">
+        <thead>
+          <tr>
+            <th>Materia</th>
+            <th>Grupo</th>
+            <th class="numero">Inscritos</th>
+            <th class="numero">Lugares libres</th>
+            <th>Ocupación</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of grupos(); track g.grupoId) {
+            <tr>
+              <td><a [routerLink]="['/grupos', g.grupoId]">{{ g.materiaNombre }}</a></td>
+              <td>{{ g.grupoClave }}</td>
+              <td class="numero">{{ g.inscritos }} / {{ g.cupoMaximo }}</td>
+              <td class="numero">
+                @if (g.inscritos >= g.cupoMaximo) {
+                  <span class="etiqueta etiqueta--rojo">Lleno</span>
+                } @else {
+                  {{ g.cupoMaximo - g.inscritos }}
+                }
+              </td>
+              <td>
+                <div class="ocupacion">
+                  <div class="ocupacion__barra">
+                    <div class="ocupacion__relleno" [class.ocupacion__relleno--lleno]="porcentaje(g) === 100"
+                         [style.width.%]="porcentaje(g)"></div>
+                  </div>
+                  <span class="dato__clave">{{ porcentaje(g) }}%</span>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

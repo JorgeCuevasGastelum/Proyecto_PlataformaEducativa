@@ -1,0 +1,77 @@
+<a routerLink="/pagos">← Volver a pagos</a>
+<h1 style="margin-top: 0.6rem">Registrar cargo</h1>
+<p class="dato__clave">El alumno lo verá en su estado de cuenta del portal. Si es la inscripción del período, no podrá inscribir materias hasta pagarla.</p>
+
+@if (erroresServidor().length) {
+  <div class="aviso aviso--error">
+    <div>
+      @for (e of erroresServidor(); track e) {
+        <div>{{ e }}</div>
+      }
+    </div>
+  </div>
+}
+
+<form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+  <div class="fila">
+    <div class="campo">
+      <label for="alumnoId">Alumno</label>
+      <select id="alumnoId" formControlName="alumnoId">
+        <option value="">Elige un alumno</option>
+        @for (a of lista.listaAlumnos(); track a.id) {
+          <option [value]="a.id">{{ a.nombre }} ({{ a.matricula }})</option>
+        }
+      </select>
+      @if (f.alumnoId.touched && f.alumnoId.hasError('required')) {
+        <span class="error">Elige a qué alumno se le hace el cargo.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="periodoId">Período</label>
+      <select id="periodoId" formControlName="periodoId">
+        <option value="">Elige un período</option>
+        @for (p of lista.listaPeriodos(); track p.id) {
+          <option [value]="p.id">{{ p.clave }}{{ p.habilitado ? ' (carga abierta)' : '' }}</option>
+        }
+      </select>
+      @if (f.periodoId.touched && f.periodoId.hasError('required')) {
+        <span class="error">Elige el período del cargo.</span>
+      }
+    </div>
+  </div>
+
+  <div class="fila">
+    <div class="campo">
+      <label for="concepto">Concepto</label>
+      <select id="concepto" formControlName="concepto">
+        <option value="inscripcion">Inscripción</option>
+        <option value="colegiatura">Colegiatura</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="monto">Monto (pesos)</label>
+      <input id="monto" type="number" min="1" formControlName="monto" />
+      @if (f.monto.touched && f.monto.hasError('required')) {
+        <span class="error">Escribe el monto.</span>
+      }
+      @if (f.monto.touched && f.monto.hasError('min')) {
+        <span class="error">El monto debe ser mayor a cero.</span>
+      }
+    </div>
+  </div>
+
+  <div class="campo" style="max-width: 300px">
+    <label for="fechaLimite">Fecha límite</label>
+    <input id="fechaLimite" type="date" formControlName="fechaLimite" />
+    @if (f.fechaLimite.touched && f.fechaLimite.hasError('required')) {
+      <span class="error">Elige hasta cuándo puede pagar.</span>
+    }
+  </div>
+
+  <div class="acciones">
+    <button class="boton" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Registrar cargo' }}</button>
+    <a class="boton boton--secundario" routerLink="/pagos">Cancelar</a>
+  </div>
+</form>

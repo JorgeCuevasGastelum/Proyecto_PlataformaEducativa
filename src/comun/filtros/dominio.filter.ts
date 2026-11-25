@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Logger } from '@nest
 import { Response } from 'express';
 import {
   AlumnoNoEncontradoError,
+  AvisoNoEncontradoError,
   CarreraNoEncontradaError,
   CredencialesInvalidasError,
   ErrorDeDominio,
@@ -27,6 +28,7 @@ const NO_ENCONTRADOS = [
   PeriodoNoEncontradoError,
   InscripcionNoEncontradaError,
   PagoNoEncontradoError,
+  AvisoNoEncontradoError,
 ];
 
 @Catch(ErrorDeDominio)

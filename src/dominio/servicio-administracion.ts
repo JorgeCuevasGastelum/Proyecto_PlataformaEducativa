@@ -9,15 +9,18 @@ import type {
   Grupo,
   Maestro,
   Materia,
+  OcupacionDeGrupo,
   Pago,
   PeriodoEscolar,
   PlanDeEstudios,
+  ResumenDelPanel,
   Rol,
   Sesion,
 } from './entidades.js';
 import {
   AlumnoInvalidoError,
   AlumnoNoEncontradoError,
+  AvisoNoEncontradoError,
   CarreraInvalidaError,
   CarreraNoEncontradaError,
   ClaveDeCarreraDuplicadaError,
@@ -456,6 +459,29 @@ export class ServicioAdministracion {
     return this.repo.crearAviso({ titulo, contenido, periodoId, fechaPublicacion: new Date() });
   }
 
+  async obtenerAviso(sesion: Sesion, avisoId: number): Promise<Aviso> {
+    await this.verificarAdministrador(sesion);
+
+    const aviso = await this.repo.buscarAvisoPorId(avisoId);
+    if (!aviso) throw new AvisoNoEncontradoError(String(avisoId));
+    return aviso;
+  }
+
+  async editarAviso(sesion: Sesion, avisoId: number, titulo: string, contenido: string): Promise<Aviso> {
+    const aviso = await this.obtenerAviso(sesion, avisoId);
+
+    const actualizado: Aviso = { ...aviso, titulo, contenido };
+    await this.repo.actualizarAviso(actualizado);
+    return actualizado;
+  }
+
+  async eliminarAviso(sesion: Sesion, avisoId: number): Promise<Aviso> {
+    const aviso = await this.obtenerAviso(sesion, avisoId);
+
+    await this.repo.eliminarAviso(aviso.id);
+    return aviso;
+  }
+
   // PAGOS
 
   // RN-26
@@ -484,6 +510,53 @@ export class ServicioAdministracion {
     const actualizado: Pago = { ...pago, estado: 'pagado', fechaPago: new Date() };
     await this.repo.actualizarPago(actualizado);
     return actualizado;
+  }
+
+  async listarPagos(sesion: Sesion): Promise<Pago[]> {
+    await this.verificarAdministrador(sesion);
+    return this.repo.listarPagos();
+  }
+
+  // TABLERO
+
+  async resumen(sesion: Sesion): Promise<ResumenDelPanel> {
+    await this.verificarAdministrador(sesion);
+
+    const alumnos = await this.repo.listarAlumnos();
+    const maestros = await this.repo.listarMaestros();
+
+    let pagosPendientes = 0;
+    let pagosVencidos = 0;
+    const hoy = new Date();
+    for (const pago of await this.repo.listarPagos()) {
+      if (pago.estado !== 'pendiente') continue;
+      pagosPendientes++;
+      if (pago.fechaLimite < hoy) pagosVencidos++;
+    }
+
+    const periodo = await this.repo.buscarPeriodoConCargaAbierta();
+    const grupos: OcupacionDeGrupo[] = [];
+    if (periodo) {
+      for (const grupo of await this.repo.listarGruposDePeriodo(periodo.id)) {
+        const materia = await this.repo.buscarMateriaPorId(grupo.materiaId);
+        grupos.push({
+          grupoId: grupo.id,
+          materiaNombre: materia?.nombre ?? '',
+          grupoClave: grupo.clave,
+          inscritos: await this.repo.contarInscripcionesActivasDeGrupo(grupo.id),
+          cupoMaximo: grupo.cupoMaximo,
+        });
+      }
+    }
+
+    return {
+      periodoAbierto: periodo ? periodo.clave : null,
+      totalAlumnos: alumnos.length,
+      totalMaestros: maestros.length,
+      pagosPendientes,
+      pagosVencidos,
+      grupos,
+    };
   }
 
   // RN-08
