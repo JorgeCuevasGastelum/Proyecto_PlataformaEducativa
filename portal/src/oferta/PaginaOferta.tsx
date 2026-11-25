@@ -5,8 +5,9 @@ import { useRestricciones } from "./useRestricciones";
 import { inscribirse } from "./servicio";
 import { Cargando } from "../compartido/componentes/Cargando";
 import { MensajeError } from "../compartido/componentes/MensajeError";
-import { estaVencido, resumenDeHorario } from "../compartido/formato";
+import { resumenDeHorario } from "../compartido/formato";
 import { usePagos } from "../pagos/usePagos";
+import { motivoDePagoPendiente } from "../pagos/pagoPendiente";
 import { mensajeDeError } from "../compartido/servicios/api";
 import { periodoAbierto } from "../compartido/servicios/periodos";
 import { usePeriodos } from "../compartido/usePeriodos";
@@ -41,19 +42,9 @@ export default function PaginaOferta() {
 
     const abierto = periodoAbierto(periodos.periodos);
 
-    // Si debe la inscripción del período o tiene un pago vencido, el servicio no lo va a dejar
-    // inscribirse; se le avisa desde antes en lugar de esperar a que le dé clic al botón.
-    let pendienteDePago: string | null = null;
-    for (const p of cuenta.pagos) {
-        if (abierto && p.periodoId === abierto.id && p.concepto === "inscripcion" && p.estado === "pendiente") {
-            pendienteDePago = `Debes pagar tu inscripción de ${abierto.clave} para poder inscribir materias.`;
-        }
-    }
-    for (const p of cuenta.pagos) {
-        if (estaVencido(p)) {
-            pendienteDePago = "Tienes un pago vencido. Mientras no lo pagues no puedes inscribir materias.";
-        }
-    }
+    // Si debe algún pago se le avisa arriba y los botones de "Inscribirme" quedan deshabilitados,
+    // en lugar de dejarlo intentar y que el servicio lo rechace.
+    const pendienteDePago = motivoDePagoPendiente(cuenta.pagos, abierto);
 
     async function inscribir(grupo: GrupoDeCatalogo) {
         setOcupado(grupo.grupoId);
@@ -99,7 +90,11 @@ export default function PaginaOferta() {
             <ul className="lista">
                 {grupos.map((g) => {
                     let accion = (
-                        <button className="boton boton--chico" onClick={() => inscribir(g)} disabled={ocupado !== null}>
+                        <button
+                            className="boton boton--chico"
+                            onClick={() => inscribir(g)}
+                            disabled={ocupado !== null || pendienteDePago !== null}
+                        >
                             {ocupado === g.grupoId ? "Inscribiendo..." : "Inscribirme"}
                         </button>
                     );

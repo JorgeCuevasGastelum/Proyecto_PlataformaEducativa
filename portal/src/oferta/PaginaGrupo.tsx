@@ -9,6 +9,10 @@ import { NoEncontrado } from "../compartido/componentes/NoEncontrado";
 import { NOMBRE_DEL_DIA, rangoDeHoras } from "../compartido/formato";
 import { mensajeDeError } from "../compartido/servicios/api";
 import { useMaterias } from "../materias/estado";
+import { usePagos } from "../pagos/usePagos";
+import { motivoDePagoPendiente } from "../pagos/pagoPendiente";
+import { usePeriodos } from "../compartido/usePeriodos";
+import { periodoAbierto } from "../compartido/servicios/periodos";
 
 interface Aviso {
     tipo: "exito" | "error";
@@ -20,6 +24,8 @@ export default function PaginaGrupo() {
 
     const { grupo, cargando, error, reintentar } = useGrupo(Number(grupoId));
     const requisitos = useRestricciones();
+    const periodos = usePeriodos();
+    const cuenta = usePagos();
 
     const inscritas = useMaterias((estado) => estado.lista);
     const cargarMaterias = useMaterias((estado) => estado.cargar);
@@ -27,12 +33,15 @@ export default function PaginaGrupo() {
     const [aviso, setAviso] = useState<Aviso | null>(null);
     const [ocupado, setOcupado] = useState(false);
 
-    if (cargando || requisitos.cargando) return <Cargando />;
+    if (cargando || requisitos.cargando || periodos.cargando || cuenta.cargando) return <Cargando />;
     if (error) return <MensajeError mensaje={error} onReintentar={reintentar} />;
     if (requisitos.error) return <MensajeError mensaje={requisitos.error} onReintentar={requisitos.reintentar} />;
+    if (periodos.error) return <MensajeError mensaje={periodos.error} onReintentar={periodos.reintentar} />;
+    if (cuenta.error) return <MensajeError mensaje={cuenta.error} onReintentar={cuenta.reintentar} />;
     if (!grupo) return <NoEncontrado />;
 
     const elegido = grupo;
+    const pendienteDePago = motivoDePagoPendiente(cuenta.pagos, periodoAbierto(periodos.periodos));
 
     async function inscribir() {
         setOcupado(true);
@@ -51,7 +60,7 @@ export default function PaginaGrupo() {
     }
 
     let accion = (
-        <button className="boton" onClick={inscribir} disabled={ocupado}>
+        <button className="boton" onClick={inscribir} disabled={ocupado || pendienteDePago !== null}>
             {ocupado ? "Inscribiendo..." : "Inscribirme"}
         </button>
     );
@@ -80,6 +89,12 @@ export default function PaginaGrupo() {
                 <h1>{elegido.materiaNombre}</h1>
                 <p className="pagina__bajada">Grupo {elegido.grupoClave} · {elegido.periodoClave}</p>
             </section>
+
+            {pendienteDePago && (
+                <p className="aviso aviso--advertencia">
+                    {pendienteDePago} <Link to="/pagos">Ir a Pagos</Link>
+                </p>
+            )}
 
             {aviso && <p className={`aviso aviso--${aviso.tipo}`}>{aviso.texto}</p>}
 
