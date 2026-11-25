@@ -451,6 +451,10 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return this.pagos.filter((p) => p.alumnoId === alumnoId);
   }
 
+  async listarPagos(): Promise<Pago[]> {
+    return [...this.pagos];
+  }
+
   async crearPago(datos: NuevoPago): Promise<Pago> {
     const nuevo: Pago = { id: siguienteId(this.pagos), ...datos };
     this.pagos.push(nuevo);
@@ -472,6 +476,20 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     const nuevo: Aviso = { id: siguienteId(this.avisos), ...datos };
     this.avisos.push(nuevo);
     return nuevo;
+  }
+
+  async buscarAvisoPorId(id: number): Promise<Aviso | null> {
+    return this.avisos.find((a) => a.id === id) ?? null;
+  }
+
+  async actualizarAviso(aviso: Aviso): Promise<void> {
+    const indice = this.avisos.findIndex((a) => a.id === aviso.id);
+    if (indice !== -1) this.avisos[indice] = aviso;
+  }
+
+  async eliminarAviso(id: number): Promise<void> {
+    const indice = this.avisos.findIndex((a) => a.id === id);
+    if (indice !== -1) this.avisos.splice(indice, 1);
   }
 
   // AYUDANTES PARA DATOS DE PRUEBA

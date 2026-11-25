@@ -15,6 +15,17 @@ export class PublicarAvisoDto {
   contenido: string;
 }
 
+export class EditarAvisoDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  titulo: string;
+
+  @IsString()
+  @IsNotEmpty()
+  contenido: string;
+}
+
 export class ConsultarAvisosDto {
   @IsInt()
   @IsPositive()

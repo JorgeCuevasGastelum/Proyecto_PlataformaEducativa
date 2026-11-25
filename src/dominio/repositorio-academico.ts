@@ -122,6 +122,8 @@ export interface RepositorioAcademico {
 
   listarPagosDeAlumno(alumnoId: number): Promise<Pago[]>;
 
+  listarPagos(): Promise<Pago[]>;
+
   crearPago(datos: NuevoPago): Promise<Pago>;
 
   actualizarPago(pago: Pago): Promise<void>;
@@ -130,4 +132,10 @@ export interface RepositorioAcademico {
   listarAvisosDePeriodo(periodoId: number): Promise<Aviso[]>;
 
   crearAviso(datos: NuevoAviso): Promise<Aviso>;
+
+  buscarAvisoPorId(id: number): Promise<Aviso | null>;
+
+  actualizarAviso(aviso: Aviso): Promise<void>;
+
+  eliminarAviso(id: number): Promise<void>;
 }

@@ -1,0 +1,211 @@
+/* ==========================================================================
+   Plataforma Educativa · Panel administrativo.
+   Sale de la hoja de estilos de gimnasio-admin, con los colores del portal
+   y el menú a la izquierda.
+   ========================================================================== */
+
+:root {
+  --tinta: #0f2233;
+  --texto: #33475b;
+  --apagado: #6b7f93;
+  --linea: #dde5ed;
+  --fondo: #f4f7fa;
+  --blanco: #ffffff;
+
+  --cian: #1fa8e0;
+  --cian-claro: #e3f4fb;
+  --verde: #4e8a17;
+  --verde-claro: #ecf5e1;
+  --ambar: #a4760a;
+  --ambar-claro: #fbf3dc;
+  --rojo: #c62838;
+  --rojo-claro: #fcecee;
+
+  --radio: 10px;
+  --sombra: 0 1px 3px rgba(15, 34, 51, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--texto);
+  background: var(--fondo);
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+h1, h2, h3 { color: var(--tinta); line-height: 1.2; margin: 0 0 0.4rem; }
+h1 { font-size: 1.55rem; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; }
+p { margin: 0 0 0.7rem; }
+a { color: #0f7fb0; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--cian); outline-offset: 2px; }
+
+/* --- el marco: menú a la izquierda y la página a la derecha -------------- */
+.marco { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+.pagina { padding: 1.4rem 1.6rem 3rem; min-width: 0; max-width: 1100px; }
+
+.menu {
+  background: var(--tinta); color: var(--blanco);
+  display: flex; flex-direction: column; gap: 1rem;
+  padding: 1rem 0.8rem; position: sticky; top: 0; height: 100vh;
+}
+.menu__marca {
+  display: flex; align-items: center; gap: 0.55rem; color: inherit; text-decoration: none;
+  font-weight: 800; font-size: 0.98rem; line-height: 1.25; padding: 0 0.3rem;
+}
+.menu__marca img { width: 32px; height: 32px; background: var(--blanco); border-radius: 7px; padding: 3px; flex: none; }
+.barra__etiqueta {
+  display: inline-block; margin-top: 0.15rem;
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  background: rgba(255, 255, 255, 0.14); padding: 0.1rem 0.5rem; border-radius: 999px;
+}
+.menu__enlaces { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; overflow-y: auto; }
+.menu__grupo {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45); padding: 0.8rem 0.6rem 0.25rem;
+}
+.menu__enlace {
+  color: rgba(255, 255, 255, 0.82); text-decoration: none;
+  padding: 0.38rem 0.6rem; border-radius: 7px; font-size: 0.92rem; font-weight: 600;
+}
+.menu__enlace:hover { background: rgba(255, 255, 255, 0.1); color: var(--blanco); }
+.menu__enlace--activo, .menu__enlace--activo:hover { background: var(--cian); color: var(--blanco); }
+.menu__sesion { display: grid; gap: 0.45rem; border-top: 1px solid rgba(255, 255, 255, 0.14); padding: 0.8rem 0.3rem 0; }
+.menu__quien { font-size: 0.82rem; color: rgba(255, 255, 255, 0.7); overflow-wrap: anywhere; }
+
+@media (max-width: 760px) {
+  .marco { grid-template-columns: 1fr; }
+  .menu { position: static; height: auto; }
+  .menu__enlaces { flex-direction: row; flex-wrap: wrap; }
+  .menu__grupo { display: none; }
+  .pagina { padding: 1rem; }
+}
+
+/* --- tarjetas ----------------------------------------------------------- */
+.tarjeta {
+  background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio);
+  padding: 1.1rem 1.2rem; box-shadow: var(--sombra); margin-bottom: 1.1rem;
+}
+
+/* --- etiquetas ---------------------------------------------------------- */
+.etiqueta {
+  display: inline-block; padding: 0.1rem 0.55rem; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 700; white-space: nowrap;
+  background: #eef2f6; color: var(--apagado);
+}
+.etiqueta--verde { background: var(--verde-claro); color: var(--verde); }
+.etiqueta--ambar { background: var(--ambar-claro); color: var(--ambar); }
+.etiqueta--rojo { background: var(--rojo-claro); color: var(--rojo); }
+
+/* --- botones ------------------------------------------------------------ */
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+  border: 1px solid transparent; border-radius: 8px; padding: 0.48rem 1rem;
+  font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap;
+  background: var(--cian); color: var(--blanco); text-decoration: none;
+}
+.boton:hover:not(:disabled) { filter: brightness(1.06); }
+.boton:disabled { opacity: 0.45; cursor: not-allowed; }
+.boton--secundario { background: var(--blanco); color: var(--tinta); border-color: var(--linea); }
+.boton--peligro { background: var(--rojo); color: var(--blanco); }
+.boton--chico { padding: 0.25rem 0.65rem; font-size: 0.84rem; }
+.acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+/* --- formulario --------------------------------------------------------- */
+.formulario { max-width: 620px; }
+.formulario .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; align-items: start; }
+@media (max-width: 600px) { .formulario .fila { grid-template-columns: 1fr; } }
+.campo { display: grid; gap: 0.28rem; margin-bottom: 0.85rem; }
+.campo > label { font-weight: 600; color: var(--tinta); font-size: 0.9rem; }
+input, select, textarea {
+  font: inherit; color: var(--texto); width: 100%;
+  padding: 0.5rem 0.65rem; border: 1px solid var(--linea); border-radius: 8px; background: var(--blanco);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--cian); box-shadow: 0 0 0 3px var(--cian-claro);
+}
+input.ng-invalid.ng-touched, select.ng-invalid.ng-touched, textarea.ng-invalid.ng-touched {
+  border-color: var(--rojo); background: #fdf7f7;
+}
+.error { color: var(--rojo); font-size: 0.82rem; font-weight: 600; }
+.contador { font-size: 0.78rem; color: var(--apagado); justify-self: end; }
+
+/* --- buscador y filtros ------------------------------------------------- */
+.buscador { display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.buscador input { max-width: 320px; }
+.buscador select { max-width: 200px; }
+.buscador__estado { font-size: 0.85rem; color: var(--apagado); }
+
+/* --- estados de una petición -------------------------------------------- */
+.cargando { color: var(--apagado); padding: 1.6rem 0.4rem; text-align: center; }
+.vacio { text-align: center; color: var(--apagado); padding: 2rem 1rem; }
+.vacio h1, .vacio h2 { color: var(--tinta); }
+
+.aviso {
+  border-radius: 8px; padding: 0.7rem 0.95rem; margin-bottom: 1rem;
+  border-left: 4px solid var(--cian); background: var(--cian-claro); color: var(--tinta); font-size: 0.93rem;
+  display: flex; gap: 0.8rem; align-items: center; justify-content: space-between; flex-wrap: wrap;
+}
+.aviso--error { border-color: var(--rojo); background: var(--rojo-claro); }
+.aviso--exito { border-color: var(--verde); background: var(--verde-claro); }
+.aviso--atencion { border-color: var(--ambar); background: var(--ambar-claro); }
+
+/* --- tabla -------------------------------------------------------------- */
+.tabla-env { overflow-x: auto; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); }
+table.datos { width: 100%; border-collapse: collapse; font-size: 0.91rem; }
+table.datos th {
+  text-align: left; background: #eef3f7; color: var(--tinta);
+  padding: 0.45rem 0.7rem; font-weight: 700; font-size: 0.8rem; white-space: nowrap;
+}
+table.datos td { padding: 0.45rem 0.7rem; border-top: 1px solid var(--linea); vertical-align: middle; }
+table.datos tr:hover td { background: #f8fafc; }
+table.datos .numero { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.datos .fila--alerta td { background: var(--rojo-claro); }
+
+/* --- detalle ------------------------------------------------------------ */
+.dato { display: flex; gap: 0.5rem; font-size: 0.92rem; }
+.dato__clave { color: var(--apagado); }
+.dato__valor { color: var(--tinta); font-weight: 600; }
+
+/* --- encabezado de página ----------------------------------------------- */
+.encabezado {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.encabezado p { margin: 0; color: var(--apagado); }
+
+/* --- resumen (los números de arriba del tablero) ------------------------ */
+.resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; margin-bottom: 1.2rem; }
+.resumen__dato {
+  background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio);
+  padding: 0.75rem 1rem; box-shadow: var(--sombra); text-decoration: none; color: inherit;
+}
+.resumen__numero { display: block; font-size: 1.6rem; font-weight: 800; color: var(--tinta); font-variant-numeric: tabular-nums; }
+.resumen__texto { font-size: 0.84rem; color: var(--apagado); }
+.resumen__dato--alerta { border-color: var(--rojo); background: var(--rojo-claro); }
+.resumen__dato--alerta .resumen__numero { color: var(--rojo); }
+
+/* --- barra de ocupación de un grupo ------------------------------------- */
+.ocupacion { display: flex; align-items: center; gap: 0.5rem; min-width: 150px; }
+.ocupacion__barra { flex: 1; height: 7px; border-radius: 999px; background: #e7edf2; overflow: hidden; }
+.ocupacion__relleno { height: 100%; background: var(--cian); }
+.ocupacion__relleno--lleno { background: var(--rojo); }
+
+/* --- avisos (lista) ----------------------------------------------------- */
+.lista-avisos { display: grid; gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
+.lista-avisos li {
+  background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio);
+  padding: 0.8rem 1rem; display: grid; grid-template-columns: 1fr auto; gap: 0.3rem 1rem;
+}
+.lista-avisos p { margin: 0; color: var(--texto); font-size: 0.92rem; white-space: pre-line; }
+.lista-avisos .fecha { font-size: 0.8rem; color: var(--apagado); }
+
+/* --- login -------------------------------------------------------------- */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 1rem; }
+.login .tarjeta { width: 100%; max-width: 380px; }
+.login__marca { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+.login__marca img { width: 36px; height: 36px; }

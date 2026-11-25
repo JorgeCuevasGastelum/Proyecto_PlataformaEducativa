@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -11,6 +11,11 @@ import { RegistrarCargoDto, RegistrarPagoDto } from './dto/pago.dto';
 @Roles('administrador')
 export class PagosController {
   constructor(private readonly administracion: ServicioAdministracion) {}
+
+  @Get()
+  listar(@UsuarioActual() sesion: Sesion) {
+    return this.administracion.listarPagos(sesion);
+  }
 
   @Post()
   @HttpCode(201)

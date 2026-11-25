@@ -323,6 +323,11 @@ export class RepositorioPrisma implements RepositorioAcademico {
     return pagos.map(aPago);
   }
 
+  async listarPagos(): Promise<Pago[]> {
+    const pagos = await this.prisma.pago.findMany({ orderBy: { id: 'asc' } });
+    return pagos.map(aPago);
+  }
+
   async crearPago(datos: NuevoPago): Promise<Pago> {
     return aPago(await this.prisma.pago.create({ data: datos }));
   }
@@ -340,5 +345,20 @@ export class RepositorioPrisma implements RepositorioAcademico {
 
   crearAviso(datos: NuevoAviso): Promise<Aviso> {
     return this.prisma.aviso.create({ data: datos });
+  }
+
+  buscarAvisoPorId(id: number): Promise<Aviso | null> {
+    return this.prisma.aviso.findUnique({ where: { id } });
+  }
+
+  async actualizarAviso(aviso: Aviso): Promise<void> {
+    await this.prisma.aviso.update({
+      where: { id: aviso.id },
+      data: { titulo: aviso.titulo, contenido: aviso.contenido },
+    });
+  }
+
+  async eliminarAviso(id: number): Promise<void> {
+    await this.prisma.aviso.delete({ where: { id } });
   }
 }
