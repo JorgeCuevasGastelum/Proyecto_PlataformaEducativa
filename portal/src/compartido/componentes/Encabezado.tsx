@@ -34,6 +34,12 @@ function claseEnlace({ isActive }: { isActive: boolean }) {
 export function Encabezado() {
   const { usuario, salir } = useSesion();
   const total = useMaterias((estado) => estado.lista.length);
+  const cargandoMaterias = useMaterias((estado) => estado.cargando);
+  const errorMaterias = useMaterias((estado) => estado.error);
+
+  // Si no se pudieron traer las materias no se sabe cuántas son, así que no se muestra un 0.
+  let contador = String(total);
+  if (errorMaterias) contador = '–';
   const navegar = useNavigate();
   const enlaces = enlacesDe(usuario?.rol);
 
@@ -56,7 +62,9 @@ export function Encabezado() {
               <li key={enlace.a}>
                 <NavLink to={enlace.a} className={claseEnlace}>
                   {enlace.texto}
-                  {enlace.a === '/materias' && <span className="barra__contador">{total}</span>}
+                  {enlace.a === '/materias' && !cargandoMaterias && (
+                    <span className="barra__contador">{contador}</span>
+                  )}
                 </NavLink>
               </li>
             ))}

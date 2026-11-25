@@ -33,6 +33,9 @@ export default function PaginaMaterias() {
     }
 
     async function baja(inscripcionId: number, nombre: string) {
+        // Se pregunta antes porque es fácil darle clic sin querer.
+        if (!window.confirm(`¿Seguro que quieres darte de baja de ${nombre}?`)) return;
+
         setOcupado(true);
         setAviso(null);
 
