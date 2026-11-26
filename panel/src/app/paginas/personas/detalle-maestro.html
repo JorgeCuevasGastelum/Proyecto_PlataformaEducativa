@@ -1,0 +1,66 @@
+@if (noExiste()) {
+  <app-no-encontrado />
+} @else if (cargando()) {
+  <p class="cargando" role="status">Cargando maestro…</p>
+} @else if (errorCarga(); as error) {
+  <div class="aviso aviso--error" role="alert">
+    {{ error }}
+    <button type="button" class="boton boton--chico" (click)="cargar()">Reintentar</button>
+  </div>
+} @else if (maestro(); as datos) {
+  <a routerLink="/maestros">← Volver a maestros</a>
+  <div class="encabezado" style="margin-top: 0.6rem">
+    <h1>{{ datos.nombre }}</h1>
+    <div class="acciones">
+      <a class="boton boton--secundario" [routerLink]="['/maestros', datos.id, 'editar']">Editar</a>
+      <button class="boton boton--peligro" type="button" (click)="eliminar()" [disabled]="eliminando()">
+        {{ eliminando() ? 'Eliminando…' : 'Eliminar' }}
+      </button>
+    </div>
+  </div>
+
+  @if (errorBaja(); as error) {
+    <div class="aviso aviso--error" role="alert">{{ error }}</div>
+  }
+
+  <div class="tarjeta" style="margin-bottom: 1rem">
+    <div class="dato">
+      <span class="dato__clave">Número de empleado</span><span class="dato__valor">{{ datos.numeroEmpleado }}</span>
+    </div>
+  </div>
+
+  <h2>Grupos asignados</h2>
+  @if (cargandoGrupos()) {
+    <p class="cargando" role="status">Cargando grupos…</p>
+  } @else if (errorGrupos(); as error) {
+    <div class="aviso aviso--error" role="alert">
+      {{ error }}
+      <button type="button" class="boton boton--chico" (click)="cargarGrupos()">Reintentar</button>
+    </div>
+  } @else if (grupos().length === 0) {
+    <p class="tarjeta vacio">Este maestro no tiene grupos asignados.</p>
+  } @else {
+    <div class="tabla-env">
+      <table class="datos">
+        <thead>
+          <tr>
+            <th scope="col">Grupo</th>
+            <th scope="col">Materia</th>
+            <th scope="col">Período</th>
+            <th scope="col" class="numero">Inscritos</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (grupo of grupos(); track grupo.grupoId) {
+            <tr>
+              <td>{{ grupo.grupoClave }}</td>
+              <td>{{ grupo.materiaNombre }}</td>
+              <td>{{ grupo.periodoClave }}</td>
+              <td class="numero">{{ grupo.inscritos }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

@@ -11,6 +11,7 @@ import type {
   EstadoDePago,
   Grupo,
   GrupoDeCatalogo,
+  GrupoDelMaestro,
   Maestro,
   Materia,
   OcupacionDeGrupo,
@@ -30,12 +31,15 @@ export type {
   EstadoDePago,
   Grupo,
   GrupoDeCatalogo,
+  GrupoDelMaestro,
   Maestro,
   Materia,
   OcupacionDeGrupo,
   PlanDeEstudios,
   ResumenDelPanel,
 };
+
+export { LONGITUD_MINIMA_CONTRASENA } from '../../../../src/dominio/entidades';
 
 // Por JSON las fechas llegan como texto.
 export type PeriodoEscolar = Omit<PeriodoDelServicio, 'fechaAperturaCarga' | 'fechaCierreCarga'> & {

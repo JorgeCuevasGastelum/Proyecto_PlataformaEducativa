@@ -13,11 +13,12 @@ import type {
   Usuario,
 } from './entidades.js';
 
-export type NuevoUsuario = Omit<Usuario, 'id'>;
+export type DatosDeCuenta = Pick<Usuario, 'correoInstitucional' | 'contrasenaHash'>;
 export type NuevaCarrera = Omit<Carrera, 'id'>;
 export type NuevoPlanDeEstudios = Omit<PlanDeEstudios, 'id'>;
 export type NuevoAlumno = Omit<Alumno, 'id'>;
 export type NuevoMaestro = Omit<Maestro, 'id'>;
+export type CambiosDeAlumno = Partial<Pick<Alumno, 'nombre' | 'planDeEstudiosId'>>;
 export type NuevaMateria = Omit<Materia, 'id'>;
 export type NuevoGrupo = Omit<Grupo, 'id'>;
 export type NuevaInscripcion = Omit<Inscripcion, 'id'>;
@@ -29,7 +30,7 @@ export interface RepositorioAcademico {
   // Acceso
   buscarUsuarioPorCorreo(correo: string): Promise<Usuario | null>;
 
-  crearUsuario(datos: NuevoUsuario): Promise<Usuario>;
+  buscarUsuarioPorId(id: number): Promise<Usuario | null>;
 
   // Personas
   buscarAlumnoPorId(id: number): Promise<Alumno | null>;
@@ -42,9 +43,17 @@ export interface RepositorioAcademico {
 
   buscarAdministradorPorId(id: number): Promise<Administrador | null>;
 
-  crearAlumno(datos: NuevoAlumno): Promise<Alumno>;
+  crearAlumno(datos: NuevoAlumno, cuenta: DatosDeCuenta): Promise<Alumno>;
 
-  crearMaestro(datos: NuevoMaestro): Promise<Maestro>;
+  actualizarAlumno(id: number, cambios: CambiosDeAlumno): Promise<Alumno>;
+
+  eliminarAlumno(id: number): Promise<void>;
+
+  crearMaestro(datos: NuevoMaestro, cuenta: DatosDeCuenta): Promise<Maestro>;
+
+  actualizarMaestro(id: number, nombre: string): Promise<Maestro>;
+
+  eliminarMaestro(id: number): Promise<void>;
 
   listarAlumnos(): Promise<Alumno[]>;
 
