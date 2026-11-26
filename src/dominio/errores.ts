@@ -325,3 +325,9 @@ export class CupoMenorAInscritosError extends ErrorDeDominio {
     super(`El grupo ${grupo} ya tiene ${inscritos} inscritos y no puede quedar con un cupo de ${cupo}.`);
   }
 }
+
+export class RegistroEnUsoError extends ErrorDeDominio {
+  constructor(mensaje: string) {
+    super(mensaje);
+  }
+}
