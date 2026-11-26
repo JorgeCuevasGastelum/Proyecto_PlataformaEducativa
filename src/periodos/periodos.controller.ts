@@ -57,7 +57,7 @@ export class PeriodosController {
       : this.administracion.cerrarCargaAcademica(sesion, id);
   }
 
-  // RN-34: el servicio responde 409 si el período tiene grupos, avisos o la carga abierta.
+  // RN-34: el servicio responde 409 si el período tiene grupos, avisos, pagos o la carga abierta.
   @Delete(':id')
   @Roles('administrador')
   eliminar(@UsuarioActual() sesion: Sesion, @Param('id', ParseIntPipe) id: number) {

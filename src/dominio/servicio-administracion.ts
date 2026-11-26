@@ -592,6 +592,13 @@ export class ServicioAdministracion {
       );
     }
 
+    const pagos = (await this.repo.listarPagos()).filter((p) => p.periodoId === periodo.id);
+    if (pagos.length > 0) {
+      throw new RegistroEnUsoError(
+        `No se puede eliminar el periodo ${periodo.clave}: tiene ${pagos.length} pago(s) registrados.`,
+      );
+    }
+
     if (periodo.habilitado) {
       throw new RegistroEnUsoError(
         `No se puede eliminar el periodo ${periodo.clave}: tiene la carga académica abierta. Ciérrala primero.`,
