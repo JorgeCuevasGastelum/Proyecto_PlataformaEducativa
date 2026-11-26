@@ -1,0 +1,60 @@
+<div class="encabezado">
+  <div>
+    <h1>Materias</h1>
+    <p>El catálogo de materias. Los grupos de cada período se abren a partir de aquí.</p>
+  </div>
+  <a class="boton" routerLink="/materias/nueva">Nueva materia</a>
+</div>
+
+<div class="buscador">
+  <input type="search" placeholder="Buscar por clave o nombre" aria-label="Buscar materias"
+         [value]="lista.texto()" (input)="escribir($event)" />
+  <span class="buscador__estado">{{ lista.visibles().length }} de {{ lista.materias().length }}</span>
+</div>
+
+@if (lista.error(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="lista.recargar()">Reintentar</button>
+  </div>
+} @else if (lista.cargando() && lista.materias().length === 0) {
+  <p class="cargando">Cargando materias…</p>
+} @else if (lista.visibles().length === 0) {
+  <div class="tarjeta vacio">
+    @if (lista.texto()) {
+      <h2>Ninguna materia coincide con "{{ lista.texto() }}"</h2>
+      <p>Prueba con otra clave o parte del nombre.</p>
+    } @else {
+      <h2>Todavía no hay materias</h2>
+      <p>Da de alta la primera para poder armar los planes de estudio.</p>
+      <a class="boton" routerLink="/materias/nueva">Nueva materia</a>
+    }
+  </div>
+} @else {
+  <div class="tabla-env">
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Clave</th>
+          <th>Nombre</th>
+          <th class="numero">Créditos</th>
+          <th class="numero">Prerrequisitos</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of lista.visibles(); track m.id) {
+          <tr>
+            <td><a [routerLink]="['/materias', m.id]">{{ m.clave }}</a></td>
+            <td>{{ m.nombre }}</td>
+            <td class="numero">{{ m.creditos }}</td>
+            <td class="numero">{{ m.prerrequisitoIds.length || '—' }}</td>
+            <td class="numero">
+              <a class="boton boton--secundario boton--chico" [routerLink]="['/materias', m.id, 'editar']">Editar</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -1,0 +1,85 @@
+@if (noExiste()) {
+  <app-no-encontrado />
+} @else {
+  <a [routerLink]="id() ? ['/materias', id()] : '/materias'">← {{ id() ? 'Volver a la materia' : 'Volver a materias' }}</a>
+  <h1 style="margin-top: 0.6rem">{{ id() ? 'Editar materia' : 'Nueva materia' }}</h1>
+
+  @if (erroresServidor().length) {
+    <div class="aviso aviso--error">
+      <div>
+        @for (e of erroresServidor(); track e) {
+          <div>{{ e }}</div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="cargando">Cargando materia…</p>
+  } @else {
+    <form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <div class="fila">
+        <div class="campo">
+          <label for="clave">Clave</label>
+          <input id="clave" formControlName="clave" autocomplete="off" style="text-transform: uppercase"
+                 (input)="claveDuplicada.set(null)" />
+          @if (id()) {
+            <span class="contador">La clave no se cambia una vez creada.</span>
+          }
+          @if (f.clave.touched && f.clave.hasError('required')) {
+            <span class="error">Escribe la clave de la materia.</span>
+          }
+          @if (f.clave.hasError('maxlength')) {
+            <span class="error">La clave es de máximo 10 caracteres.</span>
+          }
+          @if (claveDuplicada(); as mensaje) {
+            <span class="error">{{ mensaje }}</span>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="creditos">Créditos</label>
+          <input id="creditos" type="number" min="1" max="12" step="1" formControlName="creditos" />
+          @if (f.creditos.touched && f.creditos.hasError('required')) {
+            <span class="error">Indica cuántos créditos vale.</span>
+          } @else if (f.creditos.hasError('min') || f.creditos.hasError('max')) {
+            <span class="error">Los créditos van de 1 a 12.</span>
+          } @else if (f.creditos.hasError('pattern')) {
+            <span class="error">Los créditos son un número entero.</span>
+          }
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" formControlName="nombre" />
+        <span class="contador">{{ f.nombre.value.length }} / 80</span>
+        @if (f.nombre.touched && f.nombre.hasError('required')) {
+          <span class="error">Escribe el nombre de la materia.</span>
+        }
+        @if (f.nombre.hasError('maxlength')) {
+          <span class="error">El nombre es de máximo 80 caracteres.</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" rows="3" formControlName="descripcion"></textarea>
+        <span class="contador">{{ f.descripcion.value.length }} / 255</span>
+        @if (f.descripcion.touched && f.descripcion.hasError('required')) {
+          <span class="error">Escribe de qué trata la materia; es lo que ven los alumnos en el portal.</span>
+        }
+        @if (f.descripcion.hasError('maxlength')) {
+          <span class="error">La descripción es de máximo 255 caracteres.</span>
+        }
+      </div>
+
+      <div class="acciones">
+        <button class="boton" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : (id() ? 'Guardar cambios' : 'Crear materia') }}
+        </button>
+        <a class="boton boton--secundario" [routerLink]="id() ? ['/materias', id()] : '/materias'">Cancelar</a>
+      </div>
+    </form>
+  }
+}

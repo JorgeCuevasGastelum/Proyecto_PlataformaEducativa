@@ -32,10 +32,12 @@ export function mensajeDeApi(error: unknown): string {
   }
 }
 
-// El ValidationPipe de Nest manda `message` como arreglo y los demás errores como texto.
+// Nuestro servicio responde { error: { mensaje } }: arreglo si viene del ValidationPipe, texto si es
+// una regla de negocio. También se acepta el `message` de un Nest sin filtros, por si acaso.
 export function mensajesDelCuerpo(cuerpo: unknown): string[] {
   if (!cuerpo || typeof cuerpo !== 'object') return [];
-  const m = (cuerpo as { message?: unknown }).message;
+  const detalle = (cuerpo as { error?: { mensaje?: unknown } }).error;
+  const m = detalle && typeof detalle === 'object' ? detalle.mensaje : (cuerpo as { message?: unknown }).message;
   if (typeof m === 'string') return [m];
   if (Array.isArray(m)) return m.map(String);
   return [];

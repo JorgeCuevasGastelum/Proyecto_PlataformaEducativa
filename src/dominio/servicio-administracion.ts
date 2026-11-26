@@ -36,6 +36,7 @@ import {
   GrupoNoEncontradoError,
   MaestroInvalidoError,
   MaestroNoEncontradoError,
+  MateriaEnUsoError,
   MateriaInvalidaError,
   MateriaNoEncontradaError,
   MatriculaDuplicadaError,
@@ -61,6 +62,12 @@ interface DatosNuevaMateria {
   descripcion: string;
   creditos: number;
   prerrequisitoIds: number[];
+}
+
+interface CambiosDeMateria {
+  nombre?: string;
+  descripcion?: string;
+  creditos?: number;
 }
 
 interface DatosNuevaCarrera {
@@ -213,6 +220,76 @@ export class ServicioAdministracion {
     const actualizado: PlanDeEstudios = { ...plan, materiaIds: [...plan.materiaIds, materiaId] };
     await this.repo.actualizarPlanDeEstudios(actualizado);
     return actualizado;
+  }
+
+  async quitarMateriaDePlan(sesion: Sesion, planId: number, materiaId: number): Promise<PlanDeEstudios> {
+    await this.verificarAdministrador(sesion);
+
+    const plan = await this.repo.buscarPlanDeEstudiosPorId(planId);
+    if (!plan) throw new PlanDeEstudiosNoEncontradoError(String(planId));
+
+    const materia = await this.repo.buscarMateriaPorId(materiaId);
+    if (!materia) throw new MateriaNoEncontradaError(String(materiaId));
+
+    // Si no estaba en el plan, no hay nada que quitar.
+    if (!plan.materiaIds.includes(materiaId)) return plan;
+
+    const actualizado: PlanDeEstudios = { ...plan, materiaIds: plan.materiaIds.filter((id) => id !== materiaId) };
+    await this.repo.actualizarPlanDeEstudios(actualizado);
+    return actualizado;
+  }
+
+  async obtenerMateria(sesion: Sesion, materiaId: number): Promise<Materia> {
+    await this.verificarAdministrador(sesion);
+
+    const materia = await this.repo.buscarMateriaPorId(materiaId);
+    if (!materia) throw new MateriaNoEncontradaError(String(materiaId));
+    return materia;
+  }
+
+  // La clave no se cambia: es como la identifican los planes y el portal.
+  async editarMateria(sesion: Sesion, materiaId: number, cambios: CambiosDeMateria): Promise<Materia> {
+    const materia = await this.obtenerMateria(sesion, materiaId);
+
+    const nombre = cambios.nombre?.trim() ?? materia.nombre;
+    const descripcion = cambios.descripcion?.trim() ?? materia.descripcion;
+    const creditos = cambios.creditos ?? materia.creditos;
+
+    if (!nombre) throw new MateriaInvalidaError('el nombre no puede quedar vacío');
+    if (creditos <= 0) throw new MateriaInvalidaError('los créditos deben ser mayores a cero');
+
+    const actualizada: Materia = { ...materia, nombre, descripcion, creditos };
+    await this.repo.actualizarMateria(actualizada);
+    return actualizada;
+  }
+
+  // RN-32
+  async eliminarMateria(sesion: Sesion, materiaId: number): Promise<Materia> {
+    const materia = await this.obtenerMateria(sesion, materiaId);
+
+    const grupos = await this.repo.contarGruposDeMateria(materia.id);
+    if (grupos > 0) {
+      throw new MateriaEnUsoError(
+        `No se puede eliminar ${materia.nombre}: tiene ${grupos} grupo(s) registrados. Las materias con historial no se borran.`,
+      );
+    }
+
+    const seriadas = (await this.repo.listarMaterias()).filter((m) => m.prerrequisitoIds.includes(materia.id));
+    if (seriadas.length > 0) {
+      throw new MateriaEnUsoError(
+        `No se puede eliminar ${materia.nombre}: es prerrequisito de ${seriadas.map((m) => m.nombre).join(', ')}. Quita primero esa seriación.`,
+      );
+    }
+
+    const planes = (await this.repo.listarPlanesDeEstudio()).filter((p) => p.materiaIds.includes(materia.id));
+    if (planes.length > 0) {
+      throw new MateriaEnUsoError(
+        `No se puede eliminar ${materia.nombre}: está en el plan ${planes.map((p) => p.clave).join(', ')}. Quítala primero del plan.`,
+      );
+    }
+
+    await this.repo.eliminarMateria(materia.id);
+    return materia;
   }
 
   // RN-29
