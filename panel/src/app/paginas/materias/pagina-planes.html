@@ -32,7 +32,7 @@
           <tr>
             <td>{{ c.clave }}</td>
             <td>{{ c.nombre }}</td>
-            <td class="numero">{{ planesPorCarrera().get(c.id) ?? 0 }}</td>
+            <td class="numero">{{ contarPlanes(c.id) }}</td>
           </tr>
         } @empty {
           <tr><td colspan="3">Todavía no hay carreras. Da de alta la primera aquí abajo.</td></tr>
@@ -125,14 +125,16 @@
           <h3 style="margin: 0">{{ fila.plan.clave }}</h3>
           <p style="margin: 0">{{ fila.carrera }} · {{ fila.materias.length }} materias · {{ fila.creditos }} créditos</p>
         </div>
-        <div class="buscador" style="margin: 0">
-          <select #nueva [attr.aria-label]="'Materia a agregar al plan ' + fila.plan.clave">
-            <option value="">Agregar materia…</option>
+        <div class="buscador" style="margin: 0; flex-wrap: nowrap">
+          <select [attr.aria-label]="'Materia a agregar al plan ' + fila.plan.clave"
+                  (change)="elegirMateria(fila.plan.id, $event)">
+            <option value="" [selected]="planElegido() !== fila.plan.id">Agregar materia…</option>
             @for (m of fila.faltantes; track m.id) {
               <option [value]="m.id">{{ m.clave }} - {{ m.nombre }}</option>
             }
           </select>
-          <button class="boton boton--chico" (click)="agregarMateria(fila, nueva)" [disabled]="ocupado()">Agregar</button>
+          <button class="boton boton--chico" (click)="agregarMateria(fila)"
+                  [disabled]="ocupado() || planElegido() !== fila.plan.id || !materiaElegida()">Agregar</button>
         </div>
       </div>
 

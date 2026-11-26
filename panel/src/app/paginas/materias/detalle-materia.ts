@@ -1,7 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import type { Observable } from 'rxjs';
 import type { Materia } from '../../modelos/tipos';
 import { NoEncontrado } from '../no-encontrado';
 import { MateriasApi } from '../../servicios/materias-api';
@@ -18,12 +17,13 @@ interface Mensaje {
   imports: [RouterLink, NoEncontrado],
   templateUrl: './detalle-materia.html',
 })
-export class DetalleMateria {
+export class DetalleMateria implements OnInit {
   protected readonly lista = inject(ListaMaterias);
   private readonly api = inject(MateriasApi);
   private readonly router = inject(Router);
 
-  readonly id = input.required<string>();
+  // Viene de la ruta /materias/:id
+  readonly id = input<string>();
 
   protected readonly materia = signal<Materia | null>(null);
   protected readonly cargando = signal(true);
@@ -36,16 +36,14 @@ export class DetalleMateria {
   protected readonly prerrequisitos = computed(() => {
     const m = this.materia();
     if (!m) return [];
-    return m.prerrequisitoIds.map((id) => this.lista.materia(id) ?? { id, clave: '?', nombre: `Materia ${id}` });
+    return this.lista.materias().filter((o) => m.prerrequisitoIds.includes(o.id));
   });
 
   // Para el select: todas menos ella misma y las que ya son prerrequisito.
   protected readonly candidatas = computed(() => {
     const m = this.materia();
     if (!m) return [];
-    return [...this.lista.materias()]
-      .filter((o) => o.id !== m.id && !m.prerrequisitoIds.includes(o.id))
-      .sort((a, b) => a.clave.localeCompare(b.clave));
+    return this.lista.materias().filter((o) => o.id !== m.id && !m.prerrequisitoIds.includes(o.id));
   });
 
   // Las materias que la piden como requisito y los planes donde aparece: es lo que impide borrarla.
@@ -59,17 +57,8 @@ export class DetalleMateria {
     return m ? this.lista.planes().filter((p) => p.materiaIds.includes(m.id)) : [];
   });
 
-  constructor() {
-    // Al ir de una materia a otra (por ejemplo, desde un prerrequisito) Angular reutiliza
-    // este componente, así que se vuelve a cargar cada vez que cambia el id de la ruta.
-    effect(() => {
-      this.id();
-      untracked(() => {
-        this.noExiste.set(false);
-        this.mensaje.set(null);
-        this.cargar();
-      });
-    });
+  ngOnInit(): void {
+    this.cargar();
   }
 
   protected cargar(): void {
@@ -98,14 +87,41 @@ export class DetalleMateria {
     const prerrequisitoId = Number(this.elegido());
     if (!m || !prerrequisitoId) return;
 
-    this.cambiarSeriacion(this.api.agregarPrerrequisito(m.id, prerrequisitoId), 'Se agregó el prerrequisito.');
-    this.elegido.set('');
+    this.ocupado.set(true);
+    this.mensaje.set(null);
+    this.api.agregarPrerrequisito(m.id, prerrequisitoId).subscribe({
+      next: (materia) => {
+        this.materia.set(materia);
+        this.mensaje.set({ tipo: 'exito', texto: 'Se agregó el prerrequisito.' });
+        this.elegido.set('');
+        this.ocupado.set(false);
+        this.lista.recargar();
+      },
+      error: (e) => {
+        this.mensaje.set({ tipo: 'error', texto: mensajeDeApi(e) });
+        this.ocupado.set(false);
+      },
+    });
   }
 
   protected quitarPrerrequisito(prerrequisitoId: number): void {
     const m = this.materia();
     if (!m) return;
-    this.cambiarSeriacion(this.api.quitarPrerrequisito(m.id, prerrequisitoId), 'Se quitó el prerrequisito.');
+
+    this.ocupado.set(true);
+    this.mensaje.set(null);
+    this.api.quitarPrerrequisito(m.id, prerrequisitoId).subscribe({
+      next: (materia) => {
+        this.materia.set(materia);
+        this.mensaje.set({ tipo: 'exito', texto: 'Se quitó el prerrequisito.' });
+        this.ocupado.set(false);
+        this.lista.recargar();
+      },
+      error: (e) => {
+        this.mensaje.set({ tipo: 'error', texto: mensajeDeApi(e) });
+        this.ocupado.set(false);
+      },
+    });
   }
 
   protected eliminar(): void {
@@ -119,23 +135,6 @@ export class DetalleMateria {
       next: () => {
         this.lista.recargar();
         this.router.navigate(['/materias']);
-      },
-      error: (e) => {
-        this.mensaje.set({ tipo: 'error', texto: mensajeDeApi(e) });
-        this.ocupado.set(false);
-      },
-    });
-  }
-
-  private cambiarSeriacion(peticion: Observable<Materia>, exito: string): void {
-    this.ocupado.set(true);
-    this.mensaje.set(null);
-    peticion.subscribe({
-      next: (materia) => {
-        this.materia.set(materia);
-        this.mensaje.set({ tipo: 'exito', texto: exito });
-        this.ocupado.set(false);
-        this.lista.recargar();
       },
       error: (e) => {
         this.mensaje.set({ tipo: 'error', texto: mensajeDeApi(e) });

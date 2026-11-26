@@ -30,8 +30,8 @@
     <div class="dato">
       <span class="dato__clave">En los planes</span>
       <span class="dato__valor">
-        @for (p of enPlanes(); track p.id; let ultimo = $last) {
-          {{ p.clave }}{{ ultimo ? '' : ', ' }}
+        @for (p of enPlanes(); track p.id) {
+          <span class="etiqueta">{{ p.clave }}</span>
         } @empty {
           Ninguno
         }
@@ -40,8 +40,8 @@
     <div class="dato">
       <span class="dato__clave">Es requisito de</span>
       <span class="dato__valor">
-        @for (r of requeridaPor(); track r.id; let ultimo = $last) {
-          <a [routerLink]="['/materias', r.id]">{{ r.clave }}</a>{{ ultimo ? '' : ', ' }}
+        @for (r of requeridaPor(); track r.id) {
+          <span class="etiqueta">{{ r.clave }}</span>
         } @empty {
           Ninguna
         }
@@ -82,7 +82,7 @@
         <tbody>
           @for (p of prerrequisitos(); track p.id) {
             <tr>
-              <td><a [routerLink]="['/materias', p.id]">{{ p.clave }}</a></td>
+              <td>{{ p.clave }}</td>
               <td>{{ p.nombre }}</td>
               <td class="numero">
                 <button class="boton boton--secundario boton--chico" (click)="quitarPrerrequisito(p.id)"

@@ -170,6 +170,7 @@ table.datos .fila--alerta td { background: var(--rojo-claro); }
 .dato { display: flex; gap: 0.5rem; font-size: 0.92rem; }
 .dato__clave { color: var(--apagado); }
 .dato__valor { color: var(--tinta); font-weight: 600; }
+.dato__valor .etiqueta { margin-right: 0.3rem; }
 
 /* --- encabezado de página ----------------------------------------------- */
 .encabezado {

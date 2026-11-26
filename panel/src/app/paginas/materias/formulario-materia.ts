@@ -92,8 +92,8 @@ export class FormularioMateria implements OnInit {
         this.router.navigate(['/materias', materia.id]);
       },
       error: (e: HttpErrorResponse) => {
-        const tipo = (e.error as { error?: { tipo?: string } } | null)?.error?.tipo;
-        if (tipo === 'ClaveDeMateriaDuplicadaError') {
+        // Al crear, el único 409 posible es la clave repetida: se muestra junto a ese campo.
+        if (!id && e.status === 409) {
           this.claveDuplicada.set(mensajeDeApi(e));
         } else {
           const mensajes = e.status === 400 ? mensajesDelCuerpo(e.error) : [];
