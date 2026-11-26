@@ -274,6 +274,10 @@ export class RepositorioPrisma implements RepositorioAcademico {
     });
   }
 
+  async eliminarGrupo(id: number): Promise<void> {
+    await this.prisma.grupo.delete({ where: { id } });
+  }
+
   // PERIODOS
 
   listarPeriodos(): Promise<PeriodoEscolar[]> {
@@ -299,6 +303,10 @@ export class RepositorioPrisma implements RepositorioAcademico {
   async actualizarPeriodo(periodo: PeriodoEscolar): Promise<void> {
     const { id, ...datos } = periodo;
     await this.prisma.periodoEscolar.update({ where: { id }, data: datos });
+  }
+
+  async eliminarPeriodo(id: number): Promise<void> {
+    await this.prisma.periodoEscolar.delete({ where: { id } });
   }
 
   // INSCRIPCIONES

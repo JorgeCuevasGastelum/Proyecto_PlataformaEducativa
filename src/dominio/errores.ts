@@ -152,6 +152,12 @@ export class PeriodoNoEncontradoError extends ErrorDeDominio {
   }
 }
 
+export class RegistroEnUsoError extends ErrorDeDominio {
+  constructor(mensaje: string) {
+    super(mensaje);
+  }
+}
+
 export class YaExistePeriodoAbiertoError extends ErrorDeDominio {
   constructor(periodoId: string) {
     super(`Ya hay un periodo abierto (${periodoId}), hay que cerrarlo antes de abrir otro.`);

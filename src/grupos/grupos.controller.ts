@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -41,6 +41,13 @@ export class GruposController {
     @Body() dto: ActualizarGrupoDto,
   ) {
     return this.administracion.actualizarGrupo(sesion, id, dto);
+  }
+
+  // RN-35: el servicio responde 409 si el grupo ya tiene alumnos inscritos.
+  @Delete(':id')
+  @Roles('administrador')
+  eliminar(@UsuarioActual() sesion: Sesion, @Param('id', ParseIntPipe) id: number) {
+    return this.administracion.eliminarGrupo(sesion, id);
   }
 
   @Get(':id/ocupacion')

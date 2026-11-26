@@ -392,6 +392,10 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     if (indice !== -1) this.grupos[indice] = grupo;
   }
 
+  async eliminarGrupo(id: number): Promise<void> {
+    this.grupos = this.grupos.filter((g) => g.id !== id);
+  }
+
   // PERIODOS
 
   async listarPeriodos(): Promise<PeriodoEscolar[]> {
@@ -419,6 +423,10 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
   async actualizarPeriodo(periodo: PeriodoEscolar): Promise<void> {
     const indice = this.periodos.findIndex((p) => p.id === periodo.id);
     if (indice !== -1) this.periodos[indice] = periodo;
+  }
+
+  async eliminarPeriodo(id: number): Promise<void> {
+    this.periodos = this.periodos.filter((p) => p.id !== id);
   }
 
   // INSCRIPCIONES

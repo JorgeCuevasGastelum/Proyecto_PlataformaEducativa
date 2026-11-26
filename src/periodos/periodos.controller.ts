@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -32,11 +32,35 @@ export class PeriodosController {
     });
   }
 
+  @Get(':id')
+  @Roles('administrador')
+  obtener(@UsuarioActual() sesion: Sesion, @Param('id', ParseIntPipe) id: number) {
+    return this.administracion.obtenerPeriodo(sesion, id);
+  }
+
+  @Put(':id')
+  @Roles('administrador')
+  editar(@UsuarioActual() sesion: Sesion, @Param('id', ParseIntPipe) id: number, @Body() dto: CrearPeriodoDto) {
+    return this.administracion.editarPeriodo(sesion, id, {
+      clave: dto.clave,
+      fechaAperturaCarga: new Date(dto.fechaAperturaCarga),
+      fechaCierreCarga: new Date(dto.fechaCierreCarga),
+      creditosMaximos: dto.creditosMaximos,
+    });
+  }
+
   @Patch(':id')
   @Roles('administrador')
   cambiarCarga(@UsuarioActual() sesion: Sesion, @Param('id', ParseIntPipe) id: number, @Body() dto: CambiarCargaDto) {
     return dto.cargaAbierta
       ? this.administracion.abrirCargaAcademica(sesion, id)
       : this.administracion.cerrarCargaAcademica(sesion, id);
+  }
+
+  // RN-34: el servicio responde 409 si el período tiene grupos, avisos, pagos o la carga abierta.
+  @Delete(':id')
+  @Roles('administrador')
+  eliminar(@UsuarioActual() sesion: Sesion, @Param('id', ParseIntPipe) id: number) {
+    return this.administracion.eliminarPeriodo(sesion, id);
   }
 }
