@@ -152,6 +152,12 @@ export class PeriodoNoEncontradoError extends ErrorDeDominio {
   }
 }
 
+export class RegistroEnUsoError extends ErrorDeDominio {
+  constructor(mensaje: string) {
+    super(mensaje);
+  }
+}
+
 export class YaExistePeriodoAbiertoError extends ErrorDeDominio {
   constructor(periodoId: string) {
     super(`Ya hay un periodo abierto (${periodoId}), hay que cerrarlo antes de abrir otro.`);
@@ -323,11 +329,5 @@ export class SeriacionInvalidaError extends ErrorDeDominio {
 export class CupoMenorAInscritosError extends ErrorDeDominio {
   constructor(grupo: string, cupo: number, inscritos: number) {
     super(`El grupo ${grupo} ya tiene ${inscritos} inscritos y no puede quedar con un cupo de ${cupo}.`);
-  }
-}
-
-export class RegistroEnUsoError extends ErrorDeDominio {
-  constructor(mensaje: string) {
-    super(mensaje);
   }
 }
