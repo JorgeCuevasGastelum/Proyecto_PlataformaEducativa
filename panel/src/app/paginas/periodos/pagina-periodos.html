@@ -1,0 +1,63 @@
+<div class="encabezado">
+  <div>
+    <h1>Períodos</h1>
+    <p>Los períodos escolares y su carga académica. Solo uno puede tener la carga abierta.</p>
+  </div>
+  <a class="boton" routerLink="/periodos/nuevo">Nuevo período</a>
+</div>
+
+@if (mensaje(); as m) {
+  <div class="aviso aviso--{{ m.tipo }}">{{ m.texto }}</div>
+}
+
+@if (lista.error(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="lista.recargar()">Reintentar</button>
+  </div>
+} @else if (lista.cargando() && lista.periodos().length === 0) {
+  <p class="cargando">Cargando períodos…</p>
+} @else if (lista.periodos().length === 0) {
+  <div class="tarjeta vacio">
+    <h2>Todavía no hay períodos</h2>
+    <p>Crea el primero para poder abrir grupos y publicar avisos.</p>
+    <a class="boton" routerLink="/periodos/nuevo">Nuevo período</a>
+  </div>
+} @else {
+  <div class="tabla-env">
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Período</th>
+          <th>Abre la carga</th>
+          <th>Cierra la carga</th>
+          <th class="numero">Créditos máximos</th>
+          <th>Carga</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of lista.periodos(); track p.id) {
+          <tr>
+            <td><a [routerLink]="['/periodos', p.id]">{{ p.clave }}</a></td>
+            <td>{{ fecha(p.fechaAperturaCarga) }}</td>
+            <td>{{ fecha(p.fechaCierreCarga) }}</td>
+            <td class="numero">{{ p.creditosMaximos }}</td>
+            <td>
+              @if (p.habilitado) {
+                <span class="etiqueta etiqueta--verde">Carga abierta</span>
+              } @else {
+                <span class="etiqueta">Cerrada</span>
+              }
+            </td>
+            <td class="numero">
+              <button class="boton boton--secundario boton--chico" (click)="cambiarCarga(p)" [disabled]="ocupado()">
+                {{ p.habilitado ? 'Cerrar carga' : 'Abrir carga' }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
