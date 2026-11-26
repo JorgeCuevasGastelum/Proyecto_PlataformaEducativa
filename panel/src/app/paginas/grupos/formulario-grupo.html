@@ -1,0 +1,136 @@
+<a routerLink="/grupos">← Volver a grupos</a>
+<h1 style="margin-top: 0.6rem">Nuevo grupo</h1>
+
+@if (erroresServidor().length) {
+  <div class="aviso aviso--error">
+    <div>
+      @for (e of erroresServidor(); track e) {
+        <div>{{ e }}</div>
+      }
+    </div>
+  </div>
+}
+
+<form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+  <div class="fila">
+    <div class="campo">
+      <label for="materiaId">Materia</label>
+      <select id="materiaId" formControlName="materiaId">
+        <option value="">Elige una materia</option>
+        @for (m of materias.materias(); track m.id) {
+          <option [value]="m.id">{{ m.clave }} - {{ m.nombre }}</option>
+        }
+      </select>
+      @if (f.materiaId.touched && f.materiaId.hasError('required')) {
+        <span class="error">Elige la materia del grupo.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="periodoId">Período</label>
+      <select id="periodoId" formControlName="periodoId">
+        <option value="">Elige un período</option>
+        @for (p of lista.listaPeriodos(); track p.id) {
+          <option [value]="p.id">{{ p.clave }}{{ p.habilitado ? ' (carga abierta)' : '' }}</option>
+        }
+      </select>
+      @if (f.periodoId.touched && f.periodoId.hasError('required')) {
+        <span class="error">Elige el período del grupo.</span>
+      }
+    </div>
+  </div>
+
+  <div class="fila">
+    <div class="campo">
+      <label for="clave">Clave del grupo</label>
+      <input id="clave" formControlName="clave" autocomplete="off" />
+      @if (f.clave.touched && f.clave.hasError('required')) {
+        <span class="error">Escribe la clave del grupo, por ejemplo 01.</span>
+      }
+      @if (f.clave.hasError('maxlength')) {
+        <span class="error">La clave es de máximo 10 caracteres.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="cupoMaximo">Cupo</label>
+      <input id="cupoMaximo" type="number" min="1" step="1" formControlName="cupoMaximo" />
+      @if (f.cupoMaximo.touched && f.cupoMaximo.hasError('required')) {
+        <span class="error">Indica cuántos alumnos caben.</span>
+      } @else if (f.cupoMaximo.touched && f.cupoMaximo.hasError('min')) {
+        <span class="error">El cupo debe ser al menos 1.</span>
+      } @else if (f.cupoMaximo.hasError('pattern')) {
+        <span class="error">El cupo es un número entero.</span>
+      }
+    </div>
+  </div>
+
+  <div class="campo">
+    <label for="maestroId">Maestro</label>
+    <select id="maestroId" formControlName="maestroId">
+      <option value="">Elige un maestro</option>
+      @for (m of lista.listaMaestros(); track m.id) {
+        <option [value]="m.id">{{ m.nombre }} ({{ m.numeroEmpleado }})</option>
+      }
+    </select>
+    @if (f.maestroId.touched && f.maestroId.hasError('required')) {
+      <span class="error">Elige quién da el grupo.</span>
+    }
+  </div>
+
+  <h2>Horario</h2>
+
+  <div class="fila" style="grid-template-columns: 1fr 1fr 1fr">
+    <div class="campo">
+      <label for="dia1">Día (bloque 1)</label>
+      <select id="dia1" formControlName="dia1">
+        @for (d of dias; track d.valor) {
+          <option [value]="d.valor">{{ d.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="inicio1">Inicio</label>
+      <input id="inicio1" type="time" formControlName="inicio1" />
+      @if (f.inicio1.touched && f.inicio1.hasError('required')) {
+        <span class="error">Elige la hora de inicio.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="fin1">Fin</label>
+      <input id="fin1" type="time" formControlName="fin1" />
+      @if (f.fin1.touched && f.fin1.hasError('required')) {
+        <span class="error">Elige la hora de fin.</span>
+      }
+    </div>
+  </div>
+
+  <div class="fila" style="grid-template-columns: 1fr 1fr 1fr">
+    <div class="campo">
+      <label for="dia2">Día (bloque 2, opcional)</label>
+      <select id="dia2" formControlName="dia2">
+        <option value="">Sin segundo bloque</option>
+        @for (d of dias; track d.valor) {
+          <option [value]="d.valor">{{ d.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="inicio2">Inicio</label>
+      <input id="inicio2" type="time" formControlName="inicio2" />
+    </div>
+
+    <div class="campo">
+      <label for="fin2">Fin</label>
+      <input id="fin2" type="time" formControlName="fin2" />
+    </div>
+  </div>
+
+  <div class="acciones">
+    <button class="boton" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Abrir grupo' }}</button>
+    <a class="boton boton--secundario" routerLink="/grupos">Cancelar</a>
+  </div>
+</form>
