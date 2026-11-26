@@ -95,6 +95,8 @@ export interface RepositorioAcademico {
 
   actualizarGrupo(grupo: Grupo): Promise<void>;
 
+  eliminarGrupo(id: number): Promise<void>;
+
   // Periodos
   listarPeriodos(): Promise<PeriodoEscolar[]>;
 
@@ -107,6 +109,8 @@ export interface RepositorioAcademico {
   buscarPeriodoConCargaAbierta(): Promise<PeriodoEscolar | null>;
 
   actualizarPeriodo(periodo: PeriodoEscolar): Promise<void>;
+
+  eliminarPeriodo(id: number): Promise<void>;
 
   // Inscripciones
   buscarInscripcionPorId(id: number): Promise<Inscripcion | null>;
