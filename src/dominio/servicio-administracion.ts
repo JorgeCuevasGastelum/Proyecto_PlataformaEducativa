@@ -48,6 +48,7 @@ import {
   PeriodoInvalidoError,
   PeriodoNoEncontradoError,
   PlanDeEstudiosNoEncontradoError,
+  RegistroEnUsoError,
   SeriacionInvalidaError,
   YaExistePeriodoAbiertoError,
 } from './errores.js';
@@ -422,6 +423,24 @@ export class ServicioAdministracion {
     return actualizado;
   }
 
+  // RN-35
+  async eliminarGrupo(sesion: Sesion, grupoId: number): Promise<Grupo> {
+    await this.verificarAdministrador(sesion);
+
+    const grupo = await this.repo.buscarGrupoPorId(grupoId);
+    if (!grupo) throw new GrupoNoEncontradoError(String(grupoId));
+
+    const inscripciones = await this.repo.listarInscripcionesDeGrupo(grupo.id);
+    if (inscripciones.length > 0) {
+      throw new RegistroEnUsoError(
+        'No se puede borrar el grupo porque ya tiene alumnos inscritos. Puedes cambiarle el cupo o el maestro.',
+      );
+    }
+
+    await this.repo.eliminarGrupo(grupo.id);
+    return grupo;
+  }
+
   // RN-24 y RN-25
   async abrirGrupo(sesion: Sesion, datos: DatosNuevoGrupo): Promise<Grupo> {
     await this.verificarAdministrador(sesion);
@@ -525,6 +544,62 @@ export class ServicioAdministracion {
     const actualizado: PeriodoEscolar = { ...periodo, habilitado: false };
     await this.repo.actualizarPeriodo(actualizado);
     return actualizado;
+  }
+
+  async obtenerPeriodo(sesion: Sesion, periodoId: number): Promise<PeriodoEscolar> {
+    await this.verificarAdministrador(sesion);
+
+    const periodo = await this.repo.buscarPeriodoPorId(periodoId);
+    if (!periodo) throw new PeriodoNoEncontradoError(String(periodoId));
+    return periodo;
+  }
+
+  async editarPeriodo(sesion: Sesion, periodoId: number, datos: DatosNuevoPeriodo): Promise<PeriodoEscolar> {
+    const periodo = await this.obtenerPeriodo(sesion, periodoId);
+
+    if (!datos.clave || datos.creditosMaximos <= 0) {
+      throw new PeriodoInvalidoError('debe tener clave y un tope de creditos mayor a cero');
+    }
+    if (datos.fechaCierreCarga <= datos.fechaAperturaCarga) {
+      throw new PeriodoInvalidoError('la fecha de cierre debe ser despues de la de apertura');
+    }
+
+    if (datos.clave !== periodo.clave) {
+      const existente = await this.repo.buscarPeriodoPorClave(datos.clave);
+      if (existente) throw new ClaveDePeriodoDuplicadaError(datos.clave);
+    }
+
+    const actualizado: PeriodoEscolar = { ...periodo, ...datos };
+    await this.repo.actualizarPeriodo(actualizado);
+    return actualizado;
+  }
+
+  // RN-34
+  async eliminarPeriodo(sesion: Sesion, periodoId: number): Promise<PeriodoEscolar> {
+    const periodo = await this.obtenerPeriodo(sesion, periodoId);
+
+    const grupos = await this.repo.listarGruposDePeriodo(periodo.id);
+    if (grupos.length > 0) {
+      throw new RegistroEnUsoError(
+        `No se puede eliminar el periodo ${periodo.clave}: tiene ${grupos.length} grupo(s) registrados.`,
+      );
+    }
+
+    const avisos = await this.repo.listarAvisosDePeriodo(periodo.id);
+    if (avisos.length > 0) {
+      throw new RegistroEnUsoError(
+        `No se puede eliminar el periodo ${periodo.clave}: tiene ${avisos.length} aviso(s) publicados.`,
+      );
+    }
+
+    if (periodo.habilitado) {
+      throw new RegistroEnUsoError(
+        `No se puede eliminar el periodo ${periodo.clave}: tiene la carga académica abierta. Ciérrala primero.`,
+      );
+    }
+
+    await this.repo.eliminarPeriodo(periodo.id);
+    return periodo;
   }
 
   async publicarAviso(sesion: Sesion, periodoId: number, titulo: string, contenido: string): Promise<Aviso> {

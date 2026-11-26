@@ -1,0 +1,75 @@
+@if (noExiste()) {
+  <app-no-encontrado />
+} @else if (cargando()) {
+  <p class="cargando">Cargando período…</p>
+} @else if (errorCarga(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="cargar()">Reintentar</button>
+  </div>
+} @else if (periodo(); as p) {
+  <a routerLink="/periodos">← Volver a períodos</a>
+
+  <div class="encabezado" style="margin-top: 0.6rem">
+    <div>
+      <h1>Período {{ p.clave }}</h1>
+      @if (p.habilitado) {
+        <span class="etiqueta etiqueta--verde">Carga abierta</span>
+      } @else {
+        <span class="etiqueta">Carga cerrada</span>
+      }
+    </div>
+    <div class="acciones">
+      <a class="boton boton--secundario" [routerLink]="['/periodos', p.id, 'editar']">Editar</a>
+      <button class="boton boton--peligro" (click)="eliminar()" [disabled]="ocupado()">Eliminar</button>
+    </div>
+  </div>
+
+  @if (mensaje(); as aviso) {
+    <div class="aviso aviso--{{ aviso.tipo }}">{{ aviso.texto }}</div>
+  }
+
+  <div class="tarjeta" style="display: grid; gap: 0.35rem; margin-bottom: 1rem">
+    <div class="dato"><span class="dato__clave">Abre la carga</span><span class="dato__valor">{{ fecha(p.fechaAperturaCarga) }}</span></div>
+    <div class="dato"><span class="dato__clave">Cierra la carga</span><span class="dato__valor">{{ fecha(p.fechaCierreCarga) }}</span></div>
+    <div class="dato"><span class="dato__clave">Créditos máximos</span><span class="dato__valor">{{ p.creditosMaximos }}</span></div>
+  </div>
+
+  <h2>Grupos del período</h2>
+
+  @if (grupos().length === 0) {
+    <div class="tarjeta vacio">
+      <h2>Este período no tiene grupos</h2>
+      <p>Abre los grupos para que los alumnos puedan inscribirse cuando se abra la carga.</p>
+      <a class="boton" routerLink="/grupos/nuevo">Nuevo grupo</a>
+    </div>
+  } @else {
+    <div class="tabla-env">
+      <table class="datos">
+        <thead>
+          <tr>
+            <th>Materia</th>
+            <th>Grupo</th>
+            <th>Maestro</th>
+            <th>Horario</th>
+            <th class="numero">Inscritos</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of grupos(); track g.grupoId) {
+            <tr>
+              <td>
+                {{ g.materiaNombre }}
+                <div class="dato__clave">{{ g.materiaClave }}</div>
+              </td>
+              <td><a [routerLink]="['/grupos', g.grupoId]" [queryParams]="{ periodoId: p.id }">{{ g.grupoClave }}</a></td>
+              <td>{{ g.maestroNombre }}</td>
+              <td>{{ textoDeHorario(g.horario) }}</td>
+              <td class="numero">{{ inscritos(g) }} / {{ g.cupoMaximo }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

@@ -1,0 +1,66 @@
+<div class="encabezado">
+  <div>
+    <h1>Grupos</h1>
+    <p>Los grupos que se abren en cada período, con su maestro, horario y cupo.</p>
+  </div>
+  <a class="boton" routerLink="/grupos/nuevo">Nuevo grupo</a>
+</div>
+
+<div class="buscador">
+  <select aria-label="Período" (change)="elegirPeriodo($event)">
+    @for (p of lista.listaPeriodos(); track p.id) {
+      <option [value]="p.id" [selected]="p.id === lista.periodoElegido()">{{ p.clave }}{{ p.habilitado ? ' (carga abierta)' : '' }}</option>
+    }
+  </select>
+  <input type="search" placeholder="Buscar por materia" aria-label="Buscar grupos por materia"
+         [value]="lista.texto()" (input)="escribir($event)" />
+  <span class="buscador__estado">{{ lista.visibles().length }} grupos</span>
+</div>
+
+@if (lista.error(); as error) {
+  <div class="aviso aviso--error">
+    {{ error }}
+    <button class="boton boton--chico" (click)="lista.recargar()">Reintentar</button>
+  </div>
+} @else if (lista.cargando() && lista.visibles().length === 0) {
+  <p class="cargando">Cargando grupos…</p>
+} @else if (lista.visibles().length === 0) {
+  <div class="tarjeta vacio">
+    @if (lista.texto()) {
+      <h2>Ningún grupo coincide con "{{ lista.texto() }}"</h2>
+      <p>Prueba con otra materia o cambia de período.</p>
+    } @else {
+      <h2>Este período no tiene grupos</h2>
+      <p>Abre el primero para que los alumnos puedan inscribirse.</p>
+      <a class="boton" routerLink="/grupos/nuevo">Nuevo grupo</a>
+    }
+  </div>
+} @else {
+  <div class="tabla-env">
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Materia</th>
+          <th>Grupo</th>
+          <th>Maestro</th>
+          <th>Horario</th>
+          <th class="numero">Inscritos</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (g of lista.visibles(); track g.grupoId) {
+          <tr>
+            <td>
+              {{ g.materiaNombre }}
+              <div class="dato__clave">{{ g.materiaClave }}</div>
+            </td>
+            <td><a [routerLink]="['/grupos', g.grupoId]" [queryParams]="{ periodoId: lista.periodoElegido() }">{{ g.grupoClave }}</a></td>
+            <td>{{ g.maestroNombre }}</td>
+            <td>{{ textoDeHorario(g.horario) }}</td>
+            <td class="numero">{{ inscritos(g) }} / {{ g.cupoMaximo }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

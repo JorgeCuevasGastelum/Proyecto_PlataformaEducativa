@@ -1,0 +1,78 @@
+@if (noExiste()) {
+  <app-no-encontrado />
+} @else {
+  <a [routerLink]="id() ? ['/periodos', id()] : '/periodos'">← {{ id() ? 'Volver al período' : 'Volver a períodos' }}</a>
+  <h1 style="margin-top: 0.6rem">{{ id() ? 'Editar período' : 'Nuevo período' }}</h1>
+
+  @if (erroresServidor().length) {
+    <div class="aviso aviso--error">
+      <div>
+        @for (e of erroresServidor(); track e) {
+          <div>{{ e }}</div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="cargando">Cargando período…</p>
+  } @else {
+    <form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <div class="fila">
+        <div class="campo">
+          <label for="clave">Clave</label>
+          <input id="clave" formControlName="clave" autocomplete="off" (input)="claveDuplicada.set(null)" />
+          @if (f.clave.touched && f.clave.hasError('required')) {
+            <span class="error">Escribe la clave del período, por ejemplo 2026-2.</span>
+          }
+          @if (f.clave.hasError('maxlength')) {
+            <span class="error">La clave es de máximo 20 caracteres.</span>
+          }
+          @if (claveDuplicada(); as mensaje) {
+            <span class="error">{{ mensaje }}</span>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="creditosMaximos">Créditos máximos</label>
+          <input id="creditosMaximos" type="number" min="1" step="1" formControlName="creditosMaximos" />
+          @if (f.creditosMaximos.touched && f.creditosMaximos.hasError('required')) {
+            <span class="error">Indica cuántos créditos puede cargar un alumno.</span>
+          } @else if (f.creditosMaximos.touched && f.creditosMaximos.hasError('min')) {
+            <span class="error">Los créditos máximos deben ser al menos 1.</span>
+          } @else if (f.creditosMaximos.hasError('pattern')) {
+            <span class="error">Los créditos son un número entero.</span>
+          }
+        </div>
+      </div>
+
+      <div class="fila">
+        <div class="campo">
+          <label for="fechaAperturaCarga">Abre la carga</label>
+          <input id="fechaAperturaCarga" type="date" formControlName="fechaAperturaCarga" (input)="errorFechas.set(null)" />
+          @if (f.fechaAperturaCarga.touched && f.fechaAperturaCarga.hasError('required')) {
+            <span class="error">Elige cuándo abre la carga.</span>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="fechaCierreCarga">Cierra la carga</label>
+          <input id="fechaCierreCarga" type="date" formControlName="fechaCierreCarga" (input)="errorFechas.set(null)" />
+          @if (f.fechaCierreCarga.touched && f.fechaCierreCarga.hasError('required')) {
+            <span class="error">Elige cuándo cierra la carga.</span>
+          }
+          @if (errorFechas(); as mensaje) {
+            <span class="error">{{ mensaje }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="acciones">
+        <button class="boton" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : (id() ? 'Guardar cambios' : 'Crear período') }}
+        </button>
+        <a class="boton boton--secundario" [routerLink]="id() ? ['/periodos', id()] : '/periodos'">Cancelar</a>
+      </div>
+    </form>
+  }
+}
