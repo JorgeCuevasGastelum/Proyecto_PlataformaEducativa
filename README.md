@@ -1,6 +1,16 @@
-# Plataforma Educativa — El Servicio Central y la Seguridad
+# Plataforma Educativa
 
-Proyecto 4 — Portal universitario de carga académica. El dominio del avance 1 (entidades, reglas de negocio, servicios y errores) ahora se expone como un servicio REST hecho con NestJS, guarda la información en MySQL con Prisma y protege cada operación con inicio de sesión (JWT) y roles.
+Proyecto 4 — Portal universitario de carga académica. El dominio del avance 1 (entidades, reglas de negocio, servicios y errores) se expone como un servicio REST hecho con NestJS, guarda la información en MySQL con Prisma y protege cada operación con inicio de sesión (JWT) y roles.
+
+## Las tres aplicaciones
+
+| Carpeta | Qué es | Puerto | Cómo se levanta |
+|---|---|---|---|
+| raíz (`src/`) | El servicio central (avance 2) | 3000 | Este README |
+| `portal/` | El portal del alumno, en React (avance 3) | 5173 | [portal/README.md](portal/README.md) |
+| `panel/` | El panel administrativo, en Angular (avance 4) | 4200 | [panel/README.md](panel/README.md) |
+
+El portal y el panel no tienen base de datos propia: los dos usan este servicio. Primero se levanta el servicio y después la aplicación que se quiera usar.
 
 ## Requisitos
 
@@ -27,7 +37,7 @@ Proyecto 4 — Portal universitario de carga académica. El dominio del avance 1
    - `DATABASE_URL`: tu usuario, contraseña y puerto de MySQL. La base `plataforma_educativa` no hace falta crearla, la crea el paso 3.
    - `JWT_SECRET`: cualquier texto de al menos 32 caracteres. Para generar uno:
      `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-   - `ORIGENES_PERMITIDOS`: de dónde se va a llamar el servicio desde el navegador (las aplicaciones de los avances 3 y 4).
+   - `ORIGENES_PERMITIDOS`: de dónde se va a llamar el servicio desde el navegador. Para el portal y el panel: `"http://localhost:5173,http://localhost:4200"`.
 
    El archivo `.env` no se sube al repositorio.
 
@@ -100,8 +110,12 @@ Sin sesión solo se puede usar `POST /auth/login`.
 |---|---|---|---|
 | POST | /auth/login | público | Inicia sesión y regresa el token (dura 1 hora) |
 | GET | /auth/yo | con sesión | Quién soy y con qué rol |
+| GET | /resumen | administrador | Números del tablero: alumnos, maestros, pagos pendientes y vencidos, ocupación de los grupos |
 | POST | /alumnos | administrador | Registrar alumno y su cuenta |
 | GET | /alumnos | administrador | Listar alumnos |
+| GET | /alumnos/:id | administrador | Ver un alumno |
+| PATCH | /alumnos/:id | administrador | Cambiar el nombre o el plan de un alumno |
+| DELETE | /alumnos/:id | administrador | Borrar un alumno y su cuenta (RN-33) |
 | GET | /alumnos/yo/plan | alumno | Mi plan de estudios con las materias que lo forman |
 | GET | /alumnos/yo/materias | alumno | Mis materias inscritas en el período actual |
 | GET | /alumnos/yo/horario | alumno | Mi horario ordenado por día y hora |
@@ -111,30 +125,46 @@ Sin sesión solo se puede usar `POST /auth/login`.
 | POST | /maestros | administrador | Registrar maestro y su cuenta |
 | GET | /maestros | administrador | Listar maestros |
 | GET | /maestros/yo/grupos | maestro | Mis grupos y cuántos inscritos tienen |
+| GET | /maestros/:id | administrador | Ver un maestro |
+| GET | /maestros/:id/grupos | administrador | Grupos asignados a un maestro |
+| PATCH | /maestros/:id | administrador | Cambiar el nombre de un maestro |
+| DELETE | /maestros/:id | administrador | Borrar un maestro y su cuenta (RN-33) |
 | GET | /carreras | con sesión | Listar carreras |
 | POST | /carreras | administrador | Registrar carrera |
 | GET | /planes | con sesión | Listar planes de estudio con sus materias |
 | POST | /planes | administrador | Registrar plan de estudios de una carrera |
 | PUT | /planes/:id/materias/:materiaId | administrador | Agregar una materia a un plan |
+| DELETE | /planes/:id/materias/:materiaId | administrador | Quitar una materia de un plan |
 | GET | /materias | con sesión | Listar materias con sus prerrequisitos |
 | POST | /materias | administrador | Registrar materia |
+| GET | /materias/:id | administrador | Ver una materia |
+| PATCH | /materias/:id | administrador | Cambiar nombre, descripción o créditos de una materia |
+| DELETE | /materias/:id | administrador | Borrar una materia (RN-32) |
 | PUT | /materias/:id/prerrequisitos/:prerrequisitoId | administrador | Ligar un prerrequisito (seriación) |
 | DELETE | /materias/:id/prerrequisitos/:prerrequisitoId | administrador | Quitar un prerrequisito |
 | GET | /periodos | con sesión | Listar períodos |
 | POST | /periodos | administrador | Crear período |
+| GET | /periodos/:id | administrador | Ver un período |
+| PUT | /periodos/:id | administrador | Editar clave, fechas y tope de créditos de un período |
 | PATCH | /periodos/:id | administrador | Abrir o cerrar la carga (`{ "cargaAbierta": true }`) |
+| DELETE | /periodos/:id | administrador | Borrar un período (RN-34) |
 | GET | /grupos | con sesión | Grupos del período abierto con lugares disponibles (`?periodoId=` para otro) |
 | POST | /grupos | administrador | Abrir grupo con maestro, cupo y horario |
 | PATCH | /grupos/:id | administrador | Cambiar el cupo o el maestro de un grupo |
+| DELETE | /grupos/:id | administrador | Borrar un grupo sin alumnos inscritos (RN-35) |
 | GET | /grupos/:id/ocupacion | administrador | Lugares ocupados y disponibles |
 | GET | /grupos/:id/alumnos | administrador, maestro | Alumnos inscritos (el maestro solo de sus grupos) |
 | PUT | /grupos/:id/calificaciones | maestro | Capturar calificaciones de mi grupo |
 | POST | /inscripciones | alumno | Inscribirme a un grupo (`{ "grupoId": 5 }`) |
 | DELETE | /inscripciones/:id | alumno | Darme de baja (la inscripción queda en estado baja) |
+| GET | /pagos | administrador | Listar todos los cargos |
 | POST | /pagos | administrador | Registrar un cargo |
 | PATCH | /pagos/:id | administrador | Marcar un cargo como pagado (`{ "estado": "pagado" }`) |
 | GET | /avisos?periodoId= | con sesión | Avisos de un período |
 | POST | /avisos | administrador | Publicar aviso |
+| GET | /avisos/:id | administrador | Ver un aviso |
+| PATCH | /avisos/:id | administrador | Editar el título o el contenido de un aviso |
+| DELETE | /avisos/:id | administrador | Borrar un aviso |
 
 ### Respuestas
 
@@ -247,6 +277,10 @@ Las reglas RN-01 a RN-13 son las del documento del avance 1; las marcadas como *
 | RN-29 | Una carrera necesita clave y nombre, con una clave que no esté usada. Un plan de estudios necesita una carrera existente y una clave que no esté usada. | `CarreraInvalidaError`, `ClaveDeCarreraDuplicadaError`, `CarreraNoEncontradaError`, `ClaveDePlanDuplicadaError` |
 | RN-30 | Al ligar o quitar un prerrequisito, las dos materias deben existir. Una materia no puede ser requisito de sí misma, ni se puede armar una seriación circular (por ejemplo, que A pida B y B pida A). | `MateriaNoEncontradaError`, `SeriacionInvalidaError` |
 | RN-31 | Al cambiar un grupo, el cupo debe ser mayor a cero y no menor a los alumnos ya inscritos, y el nuevo maestro debe existir y no tener otro grupo a la misma hora. | `GrupoInvalidoError`, `CupoMenorAInscritosError`, `MaestroNoEncontradoError`, `EmpalmeDeMaestroError` |
+| RN-32 | No se puede borrar una materia que tiene grupos, que es prerrequisito de otra o que está en algún plan de estudios. | `MateriaEnUsoError` |
+| RN-33 | No se puede borrar un alumno con inscripciones o pagos, ni un maestro con grupos asignados. Al borrar a la persona se borra también su cuenta. | `PersonaConHistorialError` |
+| RN-34 | No se puede borrar un período que tiene grupos, avisos o pagos, ni uno con la carga abierta. | `RegistroEnUsoError` |
+| RN-35 | No se puede borrar un grupo que ya tiene alumnos inscritos (aunque se hayan dado de baja). | `RegistroEnUsoError` |
 
 ## Cambios respecto al avance 1 (retroalimentación)
 
@@ -283,7 +317,10 @@ src/
   auth/                         # inicio de sesión, JWT, guards y decoradores
   alumnos/ maestros/ materias/ planes/ periodos/
   grupos/ inscripciones/ pagos/ avisos/   # un controller y sus DTO por recurso
+  resumen/                      # los números del tablero del panel
   comun/                        # filtros de errores, formato de respuesta y registro de peticiones
   main.ts                       # arranque del servicio
   escenarios.ts                 # programa de escenarios del avance 1
+portal/                         # portal del alumno en React (avance 3)
+panel/                          # panel administrativo en Angular (avance 4)
 ```
