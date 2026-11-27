@@ -1,0 +1,91 @@
+@if (noExiste()) {
+  <app-no-encontrado />
+} @else {
+  <a [routerLink]="id() ? ['/alumnos', id()] : '/alumnos'">← {{ id() ? 'Volver al alumno' : 'Volver a alumnos' }}</a>
+  <h1 style="margin-top: 0.6rem">{{ id() ? 'Editar alumno' : 'Nuevo alumno' }}</h1>
+
+  @if (errorCarga(); as error) {
+    <div class="aviso aviso--error" role="alert">
+      {{ error }}
+      <button type="button" class="boton boton--chico" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (lista.errorPlanes(); as error) {
+    <div class="aviso aviso--error" role="alert">
+      {{ error }}
+      <button type="button" class="boton boton--chico" (click)="lista.recargarPlanes()">Reintentar</button>
+    </div>
+  } @else if (cargando() || lista.cargandoPlanes()) {
+    <p class="cargando" role="status">Cargando formulario…</p>
+  } @else if (lista.planes().length === 0) {
+    <div class="aviso aviso--atencion">
+      Registra un <a routerLink="/planes">plan de estudios</a> para poder asignarlo al alumno.
+    </div>
+  } @else {
+    @if (errorGuardado(); as error) {
+      <div class="aviso aviso--error" role="alert">{{ error }}</div>
+    }
+
+    <form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      @if (!id()) {
+        <div class="campo">
+          <label for="matricula">Matrícula</label>
+          <input id="matricula" formControlName="matricula" autocomplete="off" />
+          @if (campos.matricula.touched && campos.matricula.invalid) {
+            <span class="error">
+              {{ campos.matricula.hasError('maxlength') ? 'La matrícula es de máximo 20 caracteres.' : 'Escribe la matrícula.' }}
+            </span>
+          }
+        </div>
+      }
+
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" formControlName="nombre" autocomplete="off" />
+        @if (campos.nombre.touched && campos.nombre.invalid) {
+          <span class="error">
+            {{ campos.nombre.hasError('maxlength') ? 'El nombre es de máximo 80 caracteres.' : 'Escribe el nombre.' }}
+          </span>
+        }
+      </div>
+
+      @if (!id()) {
+        <div class="campo">
+          <label for="correo">Correo institucional</label>
+          <input id="correo" type="email" formControlName="correoInstitucional" autocomplete="off" />
+          @if (campos.correoInstitucional.touched && campos.correoInstitucional.invalid) {
+            <span class="error">
+              {{ campos.correoInstitucional.hasError('required') ? 'Escribe el correo institucional.' : 'Escribe un correo válido de hasta 120 caracteres.' }}
+            </span>
+          }
+        </div>
+        <div class="campo">
+          <label for="contrasena">Contraseña</label>
+          <input id="contrasena" type="password" formControlName="contrasena" autocomplete="new-password" />
+          @if (campos.contrasena.touched && campos.contrasena.invalid) {
+            <span class="error">Escribe una contraseña de al menos {{ minimoContrasena }} caracteres.</span>
+          }
+        </div>
+      }
+
+      <div class="campo">
+        <label for="plan">Plan de estudios</label>
+        <select id="plan" formControlName="planDeEstudiosId">
+          <option value="">Selecciona un plan</option>
+          @for (plan of lista.planes(); track plan.id) {
+            <option [value]="plan.id">{{ plan.clave }}</option>
+          }
+        </select>
+        @if (campos.planDeEstudiosId.touched && campos.planDeEstudiosId.invalid) {
+          <span class="error">Selecciona un plan de estudios.</span>
+        }
+      </div>
+
+      <div class="acciones">
+        <button class="boton" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : (id() ? 'Guardar cambios' : 'Registrar alumno') }}
+        </button>
+        <a class="boton boton--secundario" [routerLink]="id() ? ['/alumnos', id()] : '/alumnos'">Cancelar</a>
+      </div>
+    </form>
+  }
+}

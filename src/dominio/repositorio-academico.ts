@@ -18,6 +18,10 @@ export type NuevaCarrera = Omit<Carrera, 'id'>;
 export type NuevoPlanDeEstudios = Omit<PlanDeEstudios, 'id'>;
 export type NuevoAlumno = Omit<Alumno, 'id'>;
 export type NuevoMaestro = Omit<Maestro, 'id'>;
+export interface CambiosDeAlumno {
+  nombre?: string;
+  planDeEstudiosId?: number;
+}
 export type NuevaMateria = Omit<Materia, 'id'>;
 export type NuevoGrupo = Omit<Grupo, 'id'>;
 export type NuevaInscripcion = Omit<Inscripcion, 'id'>;
@@ -44,7 +48,15 @@ export interface RepositorioAcademico {
 
   crearAlumno(datos: NuevoAlumno): Promise<Alumno>;
 
+  actualizarAlumno(id: number, cambios: CambiosDeAlumno): Promise<Alumno>;
+
+  eliminarAlumno(id: number): Promise<void>;
+
   crearMaestro(datos: NuevoMaestro): Promise<Maestro>;
+
+  actualizarMaestro(id: number, nombre: string): Promise<Maestro>;
+
+  eliminarMaestro(id: number): Promise<void>;
 
   listarAlumnos(): Promise<Alumno[]>;
 

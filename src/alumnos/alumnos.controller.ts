@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decoradores/roles.decorator';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -6,6 +6,7 @@ import type { Sesion } from '../dominio/entidades';
 import { ServicioAdministracion } from '../dominio/servicio-administracion';
 import { ServicioAlumno } from '../dominio/servicio-alumno';
 import { RegistrarPagoDto } from '../pagos/dto/pago.dto';
+import { ActualizarAlumnoDto } from './dto/actualizar-alumno.dto';
 import { RegistrarAlumnoDto } from './dto/registrar-alumno.dto';
 
 @Controller('alumnos')
@@ -67,5 +68,27 @@ export class AlumnosController {
     @Body() _dto: RegistrarPagoDto,
   ) {
     return this.alumnos.pagarCargo(sesion, id);
+  }
+
+  @Get(':id')
+  @Roles('administrador')
+  obtener(@UsuarioActual() sesion: Sesion, @Param('id', ParseIntPipe) id: number) {
+    return this.administracion.obtenerAlumno(sesion, id);
+  }
+
+  @Patch(':id')
+  @Roles('administrador')
+  actualizar(
+    @UsuarioActual() sesion: Sesion,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ActualizarAlumnoDto,
+  ) {
+    return this.administracion.editarAlumno(sesion, id, dto);
+  }
+
+  @Delete(':id')
+  @Roles('administrador')
+  eliminar(@UsuarioActual() sesion: Sesion, @Param('id', ParseIntPipe) id: number) {
+    return this.administracion.eliminarAlumno(sesion, id);
   }
 }

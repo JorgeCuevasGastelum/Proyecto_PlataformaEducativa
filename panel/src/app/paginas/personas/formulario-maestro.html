@@ -1,0 +1,69 @@
+@if (noExiste()) {
+  <app-no-encontrado />
+} @else {
+  <a [routerLink]="id() ? ['/maestros', id()] : '/maestros'">← {{ id() ? 'Volver al maestro' : 'Volver a maestros' }}</a>
+  <h1 style="margin-top: 0.6rem">{{ id() ? 'Editar maestro' : 'Nuevo maestro' }}</h1>
+
+  @if (errorCarga(); as error) {
+    <div class="aviso aviso--error" role="alert">
+      {{ error }}
+      <button type="button" class="boton boton--chico" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (cargando()) {
+    <p class="cargando" role="status">Cargando maestro…</p>
+  } @else {
+    @if (errorGuardado(); as error) {
+      <div class="aviso aviso--error" role="alert">{{ error }}</div>
+    }
+
+    <form class="tarjeta formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      @if (!id()) {
+        <div class="campo">
+          <label for="numero-empleado">Número de empleado</label>
+          <input id="numero-empleado" formControlName="numeroEmpleado" autocomplete="off" />
+          @if (campos.numeroEmpleado.touched && campos.numeroEmpleado.invalid) {
+            <span class="error">
+              {{ campos.numeroEmpleado.hasError('maxlength') ? 'El número de empleado es de máximo 20 caracteres.' : 'Escribe el número de empleado.' }}
+            </span>
+          }
+        </div>
+      }
+
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" formControlName="nombre" autocomplete="off" />
+        @if (campos.nombre.touched && campos.nombre.invalid) {
+          <span class="error">
+            {{ campos.nombre.hasError('maxlength') ? 'El nombre es de máximo 80 caracteres.' : 'Escribe el nombre.' }}
+          </span>
+        }
+      </div>
+
+      @if (!id()) {
+        <div class="campo">
+          <label for="correo">Correo institucional</label>
+          <input id="correo" type="email" formControlName="correoInstitucional" autocomplete="off" />
+          @if (campos.correoInstitucional.touched && campos.correoInstitucional.invalid) {
+            <span class="error">
+              {{ campos.correoInstitucional.hasError('required') ? 'Escribe el correo institucional.' : 'Escribe un correo válido de hasta 120 caracteres.' }}
+            </span>
+          }
+        </div>
+        <div class="campo">
+          <label for="contrasena">Contraseña</label>
+          <input id="contrasena" type="password" formControlName="contrasena" autocomplete="new-password" />
+          @if (campos.contrasena.touched && campos.contrasena.invalid) {
+            <span class="error">Escribe una contraseña de al menos {{ minimoContrasena }} caracteres.</span>
+          }
+        </div>
+      }
+
+      <div class="acciones">
+        <button class="boton" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : (id() ? 'Guardar cambios' : 'Registrar maestro') }}
+        </button>
+        <a class="boton boton--secundario" [routerLink]="id() ? ['/maestros', id()] : '/maestros'">Cancelar</a>
+      </div>
+    </form>
+  }
+}

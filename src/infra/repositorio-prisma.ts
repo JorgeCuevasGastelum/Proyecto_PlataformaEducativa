@@ -14,6 +14,7 @@ import type {
   Usuario,
 } from '../dominio/entidades';
 import type {
+  CambiosDeAlumno,
   NuevaCarrera,
   NuevaInscripcion,
   NuevaMateria,
@@ -127,8 +128,28 @@ export class RepositorioPrisma implements RepositorioAcademico {
     return this.prisma.alumno.create({ data: datos });
   }
 
+  actualizarAlumno(id: number, cambios: CambiosDeAlumno): Promise<Alumno> {
+    return this.prisma.alumno.update({ where: { id }, data: cambios });
+  }
+
+  // Primero se borra su cuenta, porque el usuario apunta al alumno.
+  async eliminarAlumno(id: number): Promise<void> {
+    await this.prisma.usuario.deleteMany({ where: { alumnoId: id } });
+    await this.prisma.alumno.delete({ where: { id } });
+  }
+
   crearMaestro(datos: NuevoMaestro): Promise<Maestro> {
     return this.prisma.maestro.create({ data: datos });
+  }
+
+  actualizarMaestro(id: number, nombre: string): Promise<Maestro> {
+    return this.prisma.maestro.update({ where: { id }, data: { nombre } });
+  }
+
+  // Primero se borra su cuenta, porque el usuario apunta al maestro.
+  async eliminarMaestro(id: number): Promise<void> {
+    await this.prisma.usuario.deleteMany({ where: { maestroId: id } });
+    await this.prisma.maestro.delete({ where: { id } });
   }
 
   listarAlumnos(): Promise<Alumno[]> {

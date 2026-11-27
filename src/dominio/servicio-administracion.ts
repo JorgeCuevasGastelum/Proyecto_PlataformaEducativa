@@ -7,6 +7,7 @@ import type {
   Carrera,
   ConceptoDePago,
   Grupo,
+  GrupoDelMaestro,
   Maestro,
   Materia,
   OcupacionDeGrupo,
@@ -45,6 +46,7 @@ import {
   PagoInvalidoError,
   PagoNoEncontradoError,
   PagoYaRegistradoError,
+  PersonaConHistorialError,
   PeriodoInvalidoError,
   PeriodoNoEncontradoError,
   PlanDeEstudiosNoEncontradoError,
@@ -53,8 +55,8 @@ import {
   YaExistePeriodoAbiertoError,
 } from './errores.js';
 import type { GeneradorDeHash } from './generador-de-hash.js';
-import type { RepositorioAcademico } from './repositorio-academico.js';
-import { alumnosInscritosEnGrupo } from './consultas.js';
+import type { CambiosDeAlumno, RepositorioAcademico } from './repositorio-academico.js';
+import { alumnosInscritosEnGrupo, gruposAsignadosAMaestro } from './consultas.js';
 import { exigirRol, horariosSeEmpalman } from './reglas.js';
 
 interface DatosNuevaMateria {
@@ -131,7 +133,7 @@ export class ServicioAdministracion {
     private readonly hash: GeneradorDeHash,
   ) {}
 
-  // PERSONAS Y CUENTSA
+  // PERSONAS Y CUENTAS
 
   // RN-12
   async registrarAlumno(sesion: Sesion, datos: DatosNuevoAlumno): Promise<Alumno> {
@@ -184,6 +186,74 @@ export class ServicioAdministracion {
   async listarMaestros(sesion: Sesion): Promise<Maestro[]> {
     await this.verificarAdministrador(sesion);
     return this.repo.listarMaestros();
+  }
+
+  async obtenerAlumno(sesion: Sesion, id: number): Promise<Alumno> {
+    await this.verificarAdministrador(sesion);
+    const alumno = await this.repo.buscarAlumnoPorId(id);
+    if (!alumno) throw new AlumnoNoEncontradoError(String(id));
+    return alumno;
+  }
+
+  async editarAlumno(sesion: Sesion, id: number, cambios: CambiosDeAlumno): Promise<Alumno> {
+    await this.obtenerAlumno(sesion, id);
+
+    if (cambios.nombre !== undefined && cambios.nombre.trim() === '') {
+      throw new AlumnoInvalidoError('el nombre no puede quedar vacío');
+    }
+    if (cambios.planDeEstudiosId !== undefined) {
+      const plan = await this.repo.buscarPlanDeEstudiosPorId(cambios.planDeEstudiosId);
+      if (!plan) throw new PlanDeEstudiosNoEncontradoError(String(cambios.planDeEstudiosId));
+    }
+
+    return this.repo.actualizarAlumno(id, {
+      nombre: cambios.nombre?.trim(),
+      planDeEstudiosId: cambios.planDeEstudiosId,
+    });
+  }
+
+  // RN-33
+  async eliminarAlumno(sesion: Sesion, id: number): Promise<Alumno> {
+    const alumno = await this.obtenerAlumno(sesion, id);
+    const inscripciones = await this.repo.listarInscripcionesDeAlumno(id);
+    const pagos = await this.repo.listarPagosDeAlumno(id);
+    if (inscripciones.length > 0 || pagos.length > 0) {
+      throw new PersonaConHistorialError(
+        `No se puede borrar a ${alumno.nombre} porque ya tiene inscripciones o pagos registrados.`,
+      );
+    }
+    await this.repo.eliminarAlumno(id);
+    return alumno;
+  }
+
+  async obtenerMaestro(sesion: Sesion, id: number): Promise<Maestro> {
+    await this.verificarAdministrador(sesion);
+    const maestro = await this.repo.buscarMaestroPorId(id);
+    if (!maestro) throw new MaestroNoEncontradoError(String(id));
+    return maestro;
+  }
+
+  async editarMaestro(sesion: Sesion, id: number, cambios: { nombre?: string }): Promise<Maestro> {
+    const maestro = await this.obtenerMaestro(sesion, id);
+    if (cambios.nombre === undefined) return maestro;
+    if (cambios.nombre.trim() === '') throw new MaestroInvalidoError('el nombre no puede quedar vacío');
+    return this.repo.actualizarMaestro(id, cambios.nombre.trim());
+  }
+
+  async consultarGruposDeMaestro(sesion: Sesion, id: number): Promise<GrupoDelMaestro[]> {
+    const maestro = await this.obtenerMaestro(sesion, id);
+    return gruposAsignadosAMaestro(this.repo, maestro.id);
+  }
+
+  // RN-33
+  async eliminarMaestro(sesion: Sesion, id: number): Promise<Maestro> {
+    const maestro = await this.obtenerMaestro(sesion, id);
+    const grupos = await this.repo.listarGruposDeMaestro(id);
+    if (grupos.length > 0) {
+      throw new PersonaConHistorialError(`No se puede borrar a ${maestro.nombre} porque tiene grupos asignados.`);
+    }
+    await this.repo.eliminarMaestro(id);
+    return maestro;
   }
 
   // CATÁLOGO

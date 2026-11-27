@@ -1,0 +1,34 @@
+@if (noExiste()) {
+  <app-no-encontrado />
+} @else if (cargando()) {
+  <p class="cargando" role="status">Cargando alumno…</p>
+} @else if (errorCarga(); as error) {
+  <div class="aviso aviso--error" role="alert">
+    {{ error }}
+    <button type="button" class="boton boton--chico" (click)="cargar()">Reintentar</button>
+  </div>
+} @else if (alumno(); as datos) {
+  <a routerLink="/alumnos">← Volver a alumnos</a>
+  <div class="encabezado" style="margin-top: 0.6rem">
+    <h1>{{ datos.nombre }}</h1>
+    <div class="acciones">
+      <a class="boton boton--secundario" [routerLink]="['/alumnos', datos.id, 'editar']">Editar</a>
+      <button class="boton boton--peligro" type="button" (click)="eliminar()" [disabled]="eliminando()">
+        {{ eliminando() ? 'Eliminando…' : 'Eliminar' }}
+      </button>
+    </div>
+  </div>
+
+  @if (errorBaja(); as error) {
+    <div class="aviso aviso--error" role="alert">{{ error }}</div>
+  }
+
+  <div class="tarjeta" style="display: grid; gap: 0.45rem">
+    <div class="dato"><span class="dato__clave">Matrícula</span><span class="dato__valor">{{ datos.matricula }}</span></div>
+    <div class="dato">
+      <span class="dato__clave">Plan de estudios</span>
+      <span class="dato__valor">{{ lista.cargandoPlanes() ? 'Cargando…' : lista.claveDelPlan(datos.planDeEstudiosId) }}</span>
+    </div>
+    <a routerLink="/pagos" [queryParams]="{ buscar: datos.matricula }">Ver sus pagos</a>
+  </div>
+}

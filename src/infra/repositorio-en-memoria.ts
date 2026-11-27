@@ -14,6 +14,7 @@ import type {
   Usuario,
 } from '../dominio/entidades.js';
 import type {
+  CambiosDeAlumno,
   NuevaCarrera,
   NuevaInscripcion,
   NuevaMateria,
@@ -276,10 +277,35 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return nuevo;
   }
 
+  async actualizarAlumno(id: number, cambios: CambiosDeAlumno): Promise<Alumno> {
+    const alumno = this.alumnos.find((a) => a.id === id)!;
+    if (cambios.nombre !== undefined) alumno.nombre = cambios.nombre;
+    if (cambios.planDeEstudiosId !== undefined) alumno.planDeEstudiosId = cambios.planDeEstudiosId;
+    return alumno;
+  }
+
+  // Se borra también su cuenta.
+  async eliminarAlumno(id: number): Promise<void> {
+    this.usuarios = this.usuarios.filter((u) => !(u.rol === 'alumno' && u.personaId === id));
+    this.alumnos = this.alumnos.filter((a) => a.id !== id);
+  }
+
   async crearMaestro(datos: NuevoMaestro): Promise<Maestro> {
     const nuevo: Maestro = { id: siguienteId(this.maestros), ...datos };
     this.maestros.push(nuevo);
     return nuevo;
+  }
+
+  async actualizarMaestro(id: number, nombre: string): Promise<Maestro> {
+    const maestro = this.maestros.find((m) => m.id === id)!;
+    maestro.nombre = nombre;
+    return maestro;
+  }
+
+  // Se borra también su cuenta.
+  async eliminarMaestro(id: number): Promise<void> {
+    this.usuarios = this.usuarios.filter((u) => !(u.rol === 'maestro' && u.personaId === id));
+    this.maestros = this.maestros.filter((m) => m.id !== id);
   }
 
   async listarAlumnos(): Promise<Alumno[]> {

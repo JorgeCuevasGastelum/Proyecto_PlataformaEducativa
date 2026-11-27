@@ -1,0 +1,47 @@
+<div class="encabezado">
+  <h1>Alumnos</h1>
+  <a class="boton" routerLink="/alumnos/nuevo">Nuevo alumno</a>
+</div>
+
+<div class="buscador">
+  <input type="search" placeholder="Buscar por matrícula o nombre"
+         aria-label="Buscar por matrícula o nombre" [value]="lista.texto()" (input)="buscar($event)" />
+  <select aria-label="Filtrar por plan" (change)="cambiarPlan($event)">
+    <option value="0">Todos los planes</option>
+    @for (plan of lista.planes(); track plan.id) {
+      <option [value]="plan.id" [selected]="plan.id === lista.planId()">{{ plan.clave }}</option>
+    }
+  </select>
+</div>
+
+@if (lista.error(); as error) {
+  <div class="aviso aviso--error" role="alert">
+    {{ error }}
+    <button type="button" class="boton boton--chico" (click)="recargar()">Reintentar</button>
+  </div>
+} @else if (lista.cargando()) {
+  <p class="cargando" role="status">Cargando alumnos…</p>
+} @else if (lista.visibles().length === 0) {
+  <p class="tarjeta vacio">No hay alumnos con esos filtros.</p>
+} @else {
+  <div class="tabla-env">
+    <table class="datos">
+      <thead>
+        <tr>
+          <th scope="col">Matrícula</th>
+          <th scope="col">Nombre</th>
+          <th scope="col">Plan</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (alumno of lista.visibles(); track alumno.id) {
+          <tr>
+            <td><a [routerLink]="['/alumnos', alumno.id]">{{ alumno.matricula }}</a></td>
+            <td>{{ alumno.nombre }}</td>
+            <td>{{ lista.claveDelPlan(alumno.planDeEstudiosId) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
