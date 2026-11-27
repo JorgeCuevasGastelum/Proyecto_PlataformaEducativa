@@ -20,11 +20,14 @@
       @if (!id()) {
         <div class="campo">
           <label for="numero-empleado">Número de empleado</label>
-          <input id="numero-empleado" formControlName="numeroEmpleado" autocomplete="off" />
+          <input id="numero-empleado" formControlName="numeroEmpleado" autocomplete="off" (input)="numeroRepetido.set(null)" />
           @if (campos.numeroEmpleado.touched && campos.numeroEmpleado.invalid) {
             <span class="error">
               {{ campos.numeroEmpleado.hasError('maxlength') ? 'El número de empleado es de máximo 20 caracteres.' : 'Escribe el número de empleado.' }}
             </span>
+          }
+          @if (numeroRepetido(); as mensaje) {
+            <span class="error">{{ mensaje }}</span>
           }
         </div>
       }
@@ -42,11 +45,14 @@
       @if (!id()) {
         <div class="campo">
           <label for="correo">Correo institucional</label>
-          <input id="correo" type="email" formControlName="correoInstitucional" autocomplete="off" />
+          <input id="correo" type="email" formControlName="correoInstitucional" autocomplete="off" (input)="correoRepetido.set(null)" />
           @if (campos.correoInstitucional.touched && campos.correoInstitucional.invalid) {
             <span class="error">
               {{ campos.correoInstitucional.hasError('required') ? 'Escribe el correo institucional.' : 'Escribe un correo válido de hasta 120 caracteres.' }}
             </span>
+          }
+          @if (correoRepetido(); as mensaje) {
+            <span class="error">{{ mensaje }}</span>
           }
         </div>
         <div class="campo">

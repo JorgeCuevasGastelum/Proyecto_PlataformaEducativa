@@ -3,6 +3,7 @@ import { computed, Service, signal } from '@angular/core';
 import { API_URL } from '../config';
 import type { Aviso, PeriodoEscolar, Sobre } from '../modelos/tipos';
 import { mensajeDeApi } from './errores';
+import { sinAcentos } from './formato';
 
 @Service()
 export class ListaAvisos {
@@ -37,9 +38,9 @@ export class ListaAvisos {
 
   readonly visibles = computed(() => {
     const lista = this.avisos.value()?.data ?? [];
-    const t = this.texto().trim().toLowerCase();
+    const t = sinAcentos(this.texto().trim());
     if (!t) return lista;
-    return lista.filter((a) => a.titulo.toLowerCase().includes(t) || a.contenido.toLowerCase().includes(t));
+    return lista.filter((a) => sinAcentos(a.titulo).includes(t) || sinAcentos(a.contenido).includes(t));
   });
 
   recargar(): void {

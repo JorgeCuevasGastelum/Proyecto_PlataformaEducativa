@@ -3,6 +3,7 @@ import { computed, Service, signal } from '@angular/core';
 import { API_URL } from '../config';
 import type { Carrera, Materia, PlanDeEstudios, Sobre } from '../modelos/tipos';
 import { mensajeDeApi } from './errores';
+import { sinAcentos } from './formato';
 
 // Materias, carreras y planes se piden juntos: la pantalla de planes necesita las tres
 // y el detalle de una materia necesita los nombres de las demás para sus prerrequisitos.
@@ -28,10 +29,10 @@ export class ListaMaterias {
   readonly texto = signal('');
 
   readonly visibles = computed(() => {
-    const t = this.texto().trim().toLowerCase();
+    const t = sinAcentos(this.texto().trim());
     const lista = [...this.materias()].sort((a, b) => a.clave.localeCompare(b.clave));
     if (!t) return lista;
-    return lista.filter((m) => m.clave.toLowerCase().includes(t) || m.nombre.toLowerCase().includes(t));
+    return lista.filter((m) => sinAcentos(m.clave).includes(t) || sinAcentos(m.nombre).includes(t));
   });
 
   materia(id: number): Materia | undefined {

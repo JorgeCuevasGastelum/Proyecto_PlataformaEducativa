@@ -3,6 +3,7 @@ import { computed, Service, signal } from '@angular/core';
 import { API_URL } from '../config';
 import type { Alumno, PlanDeEstudios, Sobre } from '../modelos/tipos';
 import { mensajeDeApi } from './errores';
+import { sinAcentos } from './formato';
 
 @Service()
 export class ListaAlumnos {
@@ -28,12 +29,12 @@ export class ListaAlumnos {
 
   // Se busca por matrícula o nombre, y se puede filtrar por plan.
   readonly visibles = computed(() => {
-    const t = this.texto().trim().toLowerCase();
+    const t = sinAcentos(this.texto().trim());
     const plan = this.planId();
     return this.alumnos().filter(
       (a) =>
         (!plan || a.planDeEstudiosId === plan) &&
-        (a.matricula.toLowerCase().includes(t) || a.nombre.toLowerCase().includes(t)),
+        (sinAcentos(a.matricula).includes(t) || sinAcentos(a.nombre).includes(t)),
     );
   });
 
