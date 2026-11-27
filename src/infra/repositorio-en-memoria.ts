@@ -13,17 +13,8 @@ import type {
   PlanDeEstudios,
   Usuario,
 } from '../dominio/entidades.js';
-import {
-  AlumnoNoEncontradoError,
-  CorreoDuplicadoError,
-  MaestroNoEncontradoError,
-  MatriculaDuplicadaError,
-  NumeroEmpleadoDuplicadoError,
-  PersonaConHistorialError,
-} from '../dominio/errores.js';
 import type {
   CambiosDeAlumno,
-  DatosDeCuenta,
   NuevaCarrera,
   NuevaInscripcion,
   NuevaMateria,
@@ -34,6 +25,7 @@ import type {
   NuevoPago,
   NuevoPeriodo,
   NuevoPlanDeEstudios,
+  NuevoUsuario,
   RepositorioAcademico,
 } from '../dominio/repositorio-academico.js';
 import { generarHashSincrono } from './hash-scrypt.js';
@@ -83,10 +75,6 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     this.usuario(10, 'lucia@alumnos.edu.mx', 'alumno', 6),
     this.usuario(11, 'diego@alumnos.edu.mx', 'alumno', 7),
   ];
-
-  private siguienteAlumnoId = siguienteId(this.alumnos);
-  private siguienteMaestroId = siguienteId(this.maestros);
-  private siguienteUsuarioId = siguienteId(this.usuarios);
 
   private carreras: Carrera[] = [
     { id: 1, clave: 'ISW', nombre: 'Ingeniería en Software' },
@@ -255,15 +243,10 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return this.usuarios.find((u) => u.correoInstitucional === correo) ?? null;
   }
 
-  async buscarUsuarioPorId(id: number): Promise<Usuario | null> {
-    return this.usuarios.find((u) => u.id === id) ?? null;
-  }
-
-  private asociarCuenta(cuenta: DatosDeCuenta, rol: 'alumno' | 'maestro', personaId: number): void {
-    if (this.usuarios.some((u) => u.correoInstitucional === cuenta.correoInstitucional)) {
-      throw new CorreoDuplicadoError(cuenta.correoInstitucional);
-    }
-    this.usuarios.push({ id: this.siguienteUsuarioId++, rol, personaId, ...cuenta });
+  async crearUsuario(datos: NuevoUsuario): Promise<Usuario> {
+    const nuevo: Usuario = { id: siguienteId(this.usuarios), ...datos };
+    this.usuarios.push(nuevo);
+    return nuevo;
   }
 
   // PERSONAS
@@ -288,59 +271,40 @@ export class RepositorioEnMemoria implements RepositorioAcademico {
     return this.administradores.find((a) => a.id === id) ?? null;
   }
 
-  async crearAlumno(datos: NuevoAlumno, cuenta: DatosDeCuenta): Promise<Alumno> {
-    if (this.alumnos.some((a) => a.matricula === datos.matricula)) {
-      throw new MatriculaDuplicadaError(datos.matricula);
-    }
-    const nuevo: Alumno = { id: this.siguienteAlumnoId++, ...datos };
-    this.asociarCuenta(cuenta, 'alumno', nuevo.id);
+  async crearAlumno(datos: NuevoAlumno): Promise<Alumno> {
+    const nuevo: Alumno = { id: siguienteId(this.alumnos), ...datos };
     this.alumnos.push(nuevo);
     return nuevo;
   }
 
   async actualizarAlumno(id: number, cambios: CambiosDeAlumno): Promise<Alumno> {
-    const posicion = this.alumnos.findIndex((a) => a.id === id);
-    if (posicion === -1) throw new AlumnoNoEncontradoError(String(id));
-    const actualizado = { ...this.alumnos[posicion], ...cambios };
-    this.alumnos[posicion] = actualizado;
-    return actualizado;
+    const alumno = this.alumnos.find((a) => a.id === id)!;
+    if (cambios.nombre !== undefined) alumno.nombre = cambios.nombre;
+    if (cambios.planDeEstudiosId !== undefined) alumno.planDeEstudiosId = cambios.planDeEstudiosId;
+    return alumno;
   }
 
+  // Se borra también su cuenta.
   async eliminarAlumno(id: number): Promise<void> {
-    const alumno = this.alumnos.find((a) => a.id === id);
-    if (!alumno) throw new AlumnoNoEncontradoError(String(id));
-    if (this.inscripciones.some((i) => i.alumnoId === id) || this.pagos.some((p) => p.alumnoId === id)) {
-      throw new PersonaConHistorialError(`No se puede borrar a ${alumno.nombre} porque ya tiene inscripciones o pagos registrados.`);
-    }
-    this.usuarios = this.usuarios.filter((u) => u.rol !== 'alumno' || u.personaId !== id);
+    this.usuarios = this.usuarios.filter((u) => !(u.rol === 'alumno' && u.personaId === id));
     this.alumnos = this.alumnos.filter((a) => a.id !== id);
   }
 
-  async crearMaestro(datos: NuevoMaestro, cuenta: DatosDeCuenta): Promise<Maestro> {
-    if (this.maestros.some((m) => m.numeroEmpleado === datos.numeroEmpleado)) {
-      throw new NumeroEmpleadoDuplicadoError(datos.numeroEmpleado);
-    }
-    const nuevo: Maestro = { id: this.siguienteMaestroId++, ...datos };
-    this.asociarCuenta(cuenta, 'maestro', nuevo.id);
+  async crearMaestro(datos: NuevoMaestro): Promise<Maestro> {
+    const nuevo: Maestro = { id: siguienteId(this.maestros), ...datos };
     this.maestros.push(nuevo);
     return nuevo;
   }
 
   async actualizarMaestro(id: number, nombre: string): Promise<Maestro> {
-    const posicion = this.maestros.findIndex((m) => m.id === id);
-    if (posicion === -1) throw new MaestroNoEncontradoError(String(id));
-    const actualizado = { ...this.maestros[posicion], nombre };
-    this.maestros[posicion] = actualizado;
-    return actualizado;
+    const maestro = this.maestros.find((m) => m.id === id)!;
+    maestro.nombre = nombre;
+    return maestro;
   }
 
+  // Se borra también su cuenta.
   async eliminarMaestro(id: number): Promise<void> {
-    const maestro = this.maestros.find((m) => m.id === id);
-    if (!maestro) throw new MaestroNoEncontradoError(String(id));
-    if (this.grupos.some((g) => g.maestroId === id)) {
-      throw new PersonaConHistorialError(`No se puede borrar a ${maestro.nombre} porque tiene grupos asignados.`);
-    }
-    this.usuarios = this.usuarios.filter((u) => u.rol !== 'maestro' || u.personaId !== id);
+    this.usuarios = this.usuarios.filter((u) => !(u.rol === 'maestro' && u.personaId === id));
     this.maestros = this.maestros.filter((m) => m.id !== id);
   }
 

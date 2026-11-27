@@ -15,6 +15,7 @@ import type {
   PeriodoEscolar,
   PlanDeEstudios,
   ResumenDelPanel,
+  Rol,
   Sesion,
 } from './entidades.js';
 import {
@@ -54,7 +55,7 @@ import {
   YaExistePeriodoAbiertoError,
 } from './errores.js';
 import type { GeneradorDeHash } from './generador-de-hash.js';
-import type { CambiosDeAlumno, DatosDeCuenta, RepositorioAcademico } from './repositorio-academico.js';
+import type { CambiosDeAlumno, RepositorioAcademico } from './repositorio-academico.js';
 import { alumnosInscritosEnGrupo, gruposAsignadosAMaestro } from './consultas.js';
 import { exigirRol, horariosSeEmpalman } from './reglas.js';
 
@@ -148,13 +149,15 @@ export class ServicioAdministracion {
     const existente = await this.repo.buscarAlumnoPorMatricula(datos.matricula);
     if (existente) throw new MatriculaDuplicadaError(datos.matricula);
 
-    const cuenta = await this.prepararCuenta(datos.correoInstitucional, datos.contrasena);
+    const { correo, contrasenaHash } = await this.prepararCuenta(datos.correoInstitucional, datos.contrasena);
 
-    return this.repo.crearAlumno({
+    const alumno = await this.repo.crearAlumno({
       matricula: datos.matricula,
       nombre: datos.nombre,
       planDeEstudiosId: plan.id,
-    }, cuenta);
+    });
+    await this.crearUsuario(correo, contrasenaHash, 'alumno', alumno.id);
+    return alumno;
   }
 
   // RN-13
@@ -168,9 +171,11 @@ export class ServicioAdministracion {
     const existente = await this.repo.buscarMaestroPorNumeroEmpleado(datos.numeroEmpleado);
     if (existente) throw new NumeroEmpleadoDuplicadoError(datos.numeroEmpleado);
 
-    const cuenta = await this.prepararCuenta(datos.correoInstitucional, datos.contrasena);
+    const { correo, contrasenaHash } = await this.prepararCuenta(datos.correoInstitucional, datos.contrasena);
 
-    return this.repo.crearMaestro({ numeroEmpleado: datos.numeroEmpleado, nombre: datos.nombre }, cuenta);
+    const maestro = await this.repo.crearMaestro({ numeroEmpleado: datos.numeroEmpleado, nombre: datos.nombre });
+    await this.crearUsuario(correo, contrasenaHash, 'maestro', maestro.id);
+    return maestro;
   }
 
   async listarAlumnos(sesion: Sesion): Promise<Alumno[]> {
@@ -191,31 +196,28 @@ export class ServicioAdministracion {
   }
 
   async editarAlumno(sesion: Sesion, id: number, cambios: CambiosDeAlumno): Promise<Alumno> {
-    const alumno = await this.obtenerAlumno(sesion, id);
-    const datos: CambiosDeAlumno = {};
-    const nombre = cambios.nombre?.trim();
-    if (nombre === '') throw new AlumnoInvalidoError('el nombre no puede quedar vacío');
-    if (nombre !== undefined) datos.nombre = nombre;
+    await this.obtenerAlumno(sesion, id);
 
-    const planId = cambios.planDeEstudiosId;
-    if (planId != null && planId !== alumno.planDeEstudiosId) {
-      const plan = await this.repo.buscarPlanDeEstudiosPorId(planId);
-      if (!plan) throw new PlanDeEstudiosNoEncontradoError(String(planId));
-      datos.planDeEstudiosId = plan.id;
+    if (cambios.nombre !== undefined && cambios.nombre.trim() === '') {
+      throw new AlumnoInvalidoError('el nombre no puede quedar vacío');
+    }
+    if (cambios.planDeEstudiosId !== undefined) {
+      const plan = await this.repo.buscarPlanDeEstudiosPorId(cambios.planDeEstudiosId);
+      if (!plan) throw new PlanDeEstudiosNoEncontradoError(String(cambios.planDeEstudiosId));
     }
 
-    if (datos.nombre === undefined && datos.planDeEstudiosId === undefined) return alumno;
-    return this.repo.actualizarAlumno(id, datos);
+    return this.repo.actualizarAlumno(id, {
+      nombre: cambios.nombre?.trim(),
+      planDeEstudiosId: cambios.planDeEstudiosId,
+    });
   }
 
   // RN-33
   async eliminarAlumno(sesion: Sesion, id: number): Promise<Alumno> {
     const alumno = await this.obtenerAlumno(sesion, id);
-    const [inscripciones, pagos] = await Promise.all([
-      this.repo.listarInscripcionesDeAlumno(id),
-      this.repo.listarPagosDeAlumno(id),
-    ]);
-    if (inscripciones.length || pagos.length) {
+    const inscripciones = await this.repo.listarInscripcionesDeAlumno(id);
+    const pagos = await this.repo.listarPagosDeAlumno(id);
+    if (inscripciones.length > 0 || pagos.length > 0) {
       throw new PersonaConHistorialError(
         `No se puede borrar a ${alumno.nombre} porque ya tiene inscripciones o pagos registrados.`,
       );
@@ -233,10 +235,9 @@ export class ServicioAdministracion {
 
   async editarMaestro(sesion: Sesion, id: number, cambios: { nombre?: string }): Promise<Maestro> {
     const maestro = await this.obtenerMaestro(sesion, id);
-    const nombre = cambios.nombre?.trim();
-    if (nombre === '') throw new MaestroInvalidoError('el nombre no puede quedar vacío');
-    if (nombre === undefined) return maestro;
-    return this.repo.actualizarMaestro(id, nombre);
+    if (cambios.nombre === undefined) return maestro;
+    if (cambios.nombre.trim() === '') throw new MaestroInvalidoError('el nombre no puede quedar vacío');
+    return this.repo.actualizarMaestro(id, cambios.nombre.trim());
   }
 
   async consultarGruposDeMaestro(sesion: Sesion, id: number): Promise<GrupoDelMaestro[]> {
@@ -247,7 +248,8 @@ export class ServicioAdministracion {
   // RN-33
   async eliminarMaestro(sesion: Sesion, id: number): Promise<Maestro> {
     const maestro = await this.obtenerMaestro(sesion, id);
-    if ((await this.repo.listarGruposDeMaestro(id)).length) {
+    const grupos = await this.repo.listarGruposDeMaestro(id);
+    if (grupos.length > 0) {
       throw new PersonaConHistorialError(`No se puede borrar a ${maestro.nombre} porque tiene grupos asignados.`);
     }
     await this.repo.eliminarMaestro(id);
@@ -794,7 +796,7 @@ export class ServicioAdministracion {
   }
 
   // RN-20
-  private async prepararCuenta(correo: string, contrasena: string): Promise<DatosDeCuenta> {
+  private async prepararCuenta(correo: string, contrasena: string): Promise<{ correo: string; contrasenaHash: string }> {
     const correoNormalizado = correo.trim().toLowerCase();
     const existente = await this.repo.buscarUsuarioPorCorreo(correoNormalizado);
     if (existente) throw new CorreoDuplicadoError(correoNormalizado);
@@ -803,6 +805,10 @@ export class ServicioAdministracion {
       throw new ContrasenaDebilError(LONGITUD_MINIMA_CONTRASENA);
     }
 
-    return { correoInstitucional: correoNormalizado, contrasenaHash: await this.hash.generar(contrasena) };
+    return { correo: correoNormalizado, contrasenaHash: await this.hash.generar(contrasena) };
+  }
+
+  private async crearUsuario(correo: string, contrasenaHash: string, rol: Rol, personaId: number): Promise<void> {
+    await this.repo.crearUsuario({ correoInstitucional: correo, contrasenaHash, rol, personaId });
   }
 }

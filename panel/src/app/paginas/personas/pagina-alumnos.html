@@ -6,10 +6,10 @@
 <div class="buscador">
   <input type="search" placeholder="Buscar por matrícula o nombre"
          aria-label="Buscar por matrícula o nombre" [value]="lista.texto()" (input)="buscar($event)" />
-  <select aria-label="Filtrar por plan" [value]="lista.planId() ?? ''" (change)="cambiarPlan($event)">
-    <option value="">Todos los planes</option>
+  <select aria-label="Filtrar por plan" (change)="cambiarPlan($event)">
+    <option value="0">Todos los planes</option>
     @for (plan of lista.planes(); track plan.id) {
-      <option [value]="plan.id">{{ plan.clave }}</option>
+      <option [value]="plan.id" [selected]="plan.id === lista.planId()">{{ plan.clave }}</option>
     }
   </select>
 </div>

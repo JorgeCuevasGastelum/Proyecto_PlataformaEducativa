@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import type { GrupoDelMaestro, Maestro } from '../../modelos/tipos';
 import { mensajeDeApi } from '../../servicios/errores';
@@ -16,9 +16,10 @@ export class DetalleMaestro implements OnInit {
   private readonly api = inject(MaestrosApi);
   private readonly lista = inject(ListaMaestros);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
 
-  readonly id = input.required<string>();
+  // Viene de la ruta /maestros/:id
+  readonly id = input<string>();
+
   protected readonly maestro = signal<Maestro | null>(null);
   protected readonly grupos = signal<GrupoDelMaestro[]>([]);
   protected readonly cargando = signal(true);
@@ -36,32 +37,31 @@ export class DetalleMaestro implements OnInit {
   protected cargar(): void {
     this.cargando.set(true);
     this.errorCarga.set(null);
-    this.api.obtener(this.id()).subscribe({
+    this.api.obtener(Number(this.id())).subscribe({
       next: (maestro) => {
         this.maestro.set(maestro);
         this.cargando.set(false);
         this.cargarGrupos();
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 404 || error.status === 400) this.noExiste.set(true);
-        else this.errorCarga.set(mensajeDeApi(error));
+      error: (e: HttpErrorResponse) => {
+        // Un id que no es número también es "no existe" (el servicio responde 400).
+        if (e.status === 404 || e.status === 400) this.noExiste.set(true);
+        else this.errorCarga.set(mensajeDeApi(e));
         this.cargando.set(false);
       },
     });
   }
 
   protected cargarGrupos(): void {
-    const maestro = this.maestro();
-    if (!maestro) return;
     this.cargandoGrupos.set(true);
     this.errorGrupos.set(null);
-    this.api.gruposAsignados(maestro.id).subscribe({
+    this.api.gruposAsignados(Number(this.id())).subscribe({
       next: (grupos) => {
         this.grupos.set(grupos);
         this.cargandoGrupos.set(false);
       },
-      error: (error) => {
-        this.errorGrupos.set(mensajeDeApi(error));
+      error: (e) => {
+        this.errorGrupos.set(mensajeDeApi(e));
         this.cargandoGrupos.set(false);
       },
     });
@@ -69,19 +69,18 @@ export class DetalleMaestro implements OnInit {
 
   protected eliminar(): void {
     const maestro = this.maestro();
-    if (!maestro || this.eliminando()) return;
-    if (!confirm(`¿Seguro que quieres eliminar a ${maestro.nombre} y su cuenta?`)) return;
+    if (!maestro) return;
+    if (!confirm(`¿Seguro que quieres eliminar a ${maestro.nombre} y su cuenta? Esto no se puede deshacer.`)) return;
 
     this.eliminando.set(true);
     this.errorBaja.set(null);
     this.api.eliminar(maestro.id).subscribe({
       next: () => {
         this.lista.recargar();
-        if (!this.destroyRef.destroyed) this.router.navigate(['/maestros']);
+        this.router.navigate(['/maestros']);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 404) this.noExiste.set(true);
-        else this.errorBaja.set(mensajeDeApi(error));
+      error: (e) => {
+        this.errorBaja.set(mensajeDeApi(e));
         this.eliminando.set(false);
       },
     });

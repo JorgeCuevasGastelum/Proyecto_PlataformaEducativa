@@ -12,24 +12,28 @@ export interface DatosNuevoAlumno {
   planDeEstudiosId: number;
 }
 
+export interface CambiosDeAlumno {
+  nombre: string;
+  planDeEstudiosId: number;
+}
+
 @Service()
 export class AlumnosApi {
   private readonly http = inject(HttpClient);
-  private readonly url = `${API_URL}/alumnos`;
 
-  obtener(id: string) {
-    return this.http.get<Sobre<Alumno>>(`${this.url}/${encodeURIComponent(id)}`).pipe(map((r) => r.data));
+  obtener(id: number) {
+    return this.http.get<Sobre<Alumno>>(`${API_URL}/alumnos/${id}`).pipe(map((r) => r.data));
   }
 
   crear(datos: DatosNuevoAlumno) {
-    return this.http.post<Sobre<Alumno>>(this.url, datos).pipe(map((r) => r.data));
+    return this.http.post<Sobre<Alumno>>(`${API_URL}/alumnos`, datos).pipe(map((r) => r.data));
   }
 
-  actualizar(id: string, cambios: Partial<Pick<Alumno, 'nombre' | 'planDeEstudiosId'>>) {
-    return this.http.patch<Sobre<Alumno>>(`${this.url}/${encodeURIComponent(id)}`, cambios).pipe(map((r) => r.data));
+  actualizar(id: number, cambios: CambiosDeAlumno) {
+    return this.http.patch<Sobre<Alumno>>(`${API_URL}/alumnos/${id}`, cambios).pipe(map((r) => r.data));
   }
 
   eliminar(id: number) {
-    return this.http.delete<Sobre<Alumno>>(`${this.url}/${id}`).pipe(map((r) => r.data));
+    return this.http.delete<Sobre<Alumno>>(`${API_URL}/alumnos/${id}`).pipe(map((r) => r.data));
   }
 }

@@ -14,25 +14,24 @@ export interface DatosNuevoMaestro {
 @Service()
 export class MaestrosApi {
   private readonly http = inject(HttpClient);
-  private readonly url = `${API_URL}/maestros`;
 
-  obtener(id: string) {
-    return this.http.get<Sobre<Maestro>>(`${this.url}/${encodeURIComponent(id)}`).pipe(map((r) => r.data));
+  obtener(id: number) {
+    return this.http.get<Sobre<Maestro>>(`${API_URL}/maestros/${id}`).pipe(map((r) => r.data));
   }
 
   gruposAsignados(id: number) {
-    return this.http.get<Sobre<GrupoDelMaestro[]>>(`${this.url}/${id}/grupos`).pipe(map((r) => r.data));
+    return this.http.get<Sobre<GrupoDelMaestro[]>>(`${API_URL}/maestros/${id}/grupos`).pipe(map((r) => r.data));
   }
 
   crear(datos: DatosNuevoMaestro) {
-    return this.http.post<Sobre<Maestro>>(this.url, datos).pipe(map((r) => r.data));
+    return this.http.post<Sobre<Maestro>>(`${API_URL}/maestros`, datos).pipe(map((r) => r.data));
   }
 
-  actualizar(id: string, cambios: Pick<Maestro, 'nombre'>) {
-    return this.http.patch<Sobre<Maestro>>(`${this.url}/${encodeURIComponent(id)}`, cambios).pipe(map((r) => r.data));
+  actualizar(id: number, nombre: string) {
+    return this.http.patch<Sobre<Maestro>>(`${API_URL}/maestros/${id}`, { nombre }).pipe(map((r) => r.data));
   }
 
   eliminar(id: number) {
-    return this.http.delete<Sobre<Maestro>>(`${this.url}/${id}`).pipe(map((r) => r.data));
+    return this.http.delete<Sobre<Maestro>>(`${API_URL}/maestros/${id}`).pipe(map((r) => r.data));
   }
 }

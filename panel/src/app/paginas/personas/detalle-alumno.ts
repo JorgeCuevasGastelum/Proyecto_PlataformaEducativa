@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import type { Alumno } from '../../modelos/tipos';
 import { AlumnosApi } from '../../servicios/alumnos-api';
@@ -15,10 +15,11 @@ import { NoEncontrado } from '../no-encontrado';
 export class DetalleAlumno implements OnInit {
   private readonly api = inject(AlumnosApi);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
   protected readonly lista = inject(ListaAlumnos);
 
-  readonly id = input.required<string>();
+  // Viene de la ruta /alumnos/:id
+  readonly id = input<string>();
+
   protected readonly alumno = signal<Alumno | null>(null);
   protected readonly cargando = signal(true);
   protected readonly noExiste = signal(false);
@@ -33,14 +34,15 @@ export class DetalleAlumno implements OnInit {
   protected cargar(): void {
     this.cargando.set(true);
     this.errorCarga.set(null);
-    this.api.obtener(this.id()).subscribe({
+    this.api.obtener(Number(this.id())).subscribe({
       next: (alumno) => {
         this.alumno.set(alumno);
         this.cargando.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 404 || error.status === 400) this.noExiste.set(true);
-        else this.errorCarga.set(mensajeDeApi(error));
+      error: (e: HttpErrorResponse) => {
+        // Un id que no es número también es "no existe" (el servicio responde 400).
+        if (e.status === 404 || e.status === 400) this.noExiste.set(true);
+        else this.errorCarga.set(mensajeDeApi(e));
         this.cargando.set(false);
       },
     });
@@ -48,19 +50,18 @@ export class DetalleAlumno implements OnInit {
 
   protected eliminar(): void {
     const alumno = this.alumno();
-    if (!alumno || this.eliminando()) return;
-    if (!confirm(`¿Seguro que quieres eliminar a ${alumno.nombre} y su cuenta?`)) return;
+    if (!alumno) return;
+    if (!confirm(`¿Seguro que quieres eliminar a ${alumno.nombre} y su cuenta? Esto no se puede deshacer.`)) return;
 
     this.eliminando.set(true);
     this.errorBaja.set(null);
     this.api.eliminar(alumno.id).subscribe({
       next: () => {
         this.lista.recargar();
-        if (!this.destroyRef.destroyed) this.router.navigate(['/alumnos']);
+        this.router.navigate(['/alumnos']);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 404) this.noExiste.set(true);
-        else this.errorBaja.set(mensajeDeApi(error));
+      error: (e) => {
+        this.errorBaja.set(mensajeDeApi(e));
         this.eliminando.set(false);
       },
     });

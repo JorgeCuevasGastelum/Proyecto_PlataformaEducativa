@@ -15,8 +15,7 @@ export class PaginaAlumnos {
   }
 
   protected cambiarPlan(evento: Event): void {
-    const valor = (evento.target as HTMLSelectElement).value;
-    this.lista.planId.set(valor ? Number(valor) : null);
+    this.lista.planId.set(Number((evento.target as HTMLSelectElement).value));
   }
 
   protected recargar(): void {

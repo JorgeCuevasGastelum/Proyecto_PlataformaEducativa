@@ -70,9 +70,9 @@
       <div class="campo">
         <label for="plan">Plan de estudios</label>
         <select id="plan" formControlName="planDeEstudiosId">
-          <option [ngValue]="null" disabled>Selecciona un plan</option>
+          <option value="">Selecciona un plan</option>
           @for (plan of lista.planes(); track plan.id) {
-            <option [ngValue]="plan.id">{{ plan.clave }}</option>
+            <option [value]="plan.id">{{ plan.clave }}</option>
           }
         </select>
         @if (campos.planDeEstudiosId.touched && campos.planDeEstudiosId.invalid) {

@@ -7,18 +7,21 @@ import { mensajeDeApi } from './errores';
 @Service()
 export class ListaMaestros {
   private readonly recurso = httpResource<Sobre<Maestro[]>>(() => `${API_URL}/maestros`);
-  private readonly maestros = computed(() => this.recurso.hasValue() ? this.recurso.value().data : []);
-  readonly cargando = this.recurso.isLoading;
+
+  private readonly maestros = computed(() => this.recurso.value()?.data ?? []);
+  readonly cargando = computed(() => this.recurso.isLoading());
   readonly error = computed(() => {
-    const error = this.recurso.error();
-    return error ? mensajeDeApi(error) : null;
+    const e = this.recurso.error();
+    return e ? mensajeDeApi(e) : null;
   });
 
   readonly texto = signal('');
+
+  // Se busca por número de empleado o nombre.
   readonly visibles = computed(() => {
-    const texto = this.texto().trim().toLowerCase();
-    return this.maestros().filter((maestro) =>
-      maestro.numeroEmpleado.toLowerCase().includes(texto) || maestro.nombre.toLowerCase().includes(texto),
+    const t = this.texto().trim().toLowerCase();
+    return this.maestros().filter(
+      (m) => m.numeroEmpleado.toLowerCase().includes(t) || m.nombre.toLowerCase().includes(t),
     );
   });
 

@@ -13,17 +13,8 @@ import type {
   PlanDeEstudios,
   Usuario,
 } from '../dominio/entidades';
-import {
-  AlumnoNoEncontradoError,
-  CorreoDuplicadoError,
-  MaestroNoEncontradoError,
-  MatriculaDuplicadaError,
-  NumeroEmpleadoDuplicadoError,
-  PersonaConHistorialError,
-} from '../dominio/errores';
 import type {
   CambiosDeAlumno,
-  DatosDeCuenta,
   NuevaCarrera,
   NuevaInscripcion,
   NuevaMateria,
@@ -34,9 +25,9 @@ import type {
   NuevoPago,
   NuevoPeriodo,
   NuevoPlanDeEstudios,
+  NuevoUsuario,
   RepositorioAcademico,
 } from '../dominio/repositorio-academico';
-import { Prisma } from '../generado/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 function aUsuario(u: {
@@ -98,9 +89,17 @@ export class RepositorioPrisma implements RepositorioAcademico {
     return u ? aUsuario(u) : null;
   }
 
-  async buscarUsuarioPorId(id: number): Promise<Usuario | null> {
-    const u = await this.prisma.usuario.findUnique({ where: { id } });
-    return u ? aUsuario(u) : null;
+  async crearUsuario(datos: NuevoUsuario): Promise<Usuario> {
+    const persona =
+      datos.rol === 'alumno'
+        ? { alumnoId: datos.personaId }
+        : datos.rol === 'maestro'
+          ? { maestroId: datos.personaId }
+          : { administradorId: datos.personaId };
+    const u = await this.prisma.usuario.create({
+      data: { correoInstitucional: datos.correoInstitucional, contrasenaHash: datos.contrasenaHash, rol: datos.rol, ...persona },
+    });
+    return aUsuario(u);
   }
 
   // PERSONAS
@@ -125,94 +124,32 @@ export class RepositorioPrisma implements RepositorioAcademico {
     return this.prisma.administrador.findUnique({ where: { id } });
   }
 
-  async crearAlumno(datos: NuevoAlumno, cuenta: DatosDeCuenta): Promise<Alumno> {
-    try {
-      return await this.prisma.alumno.create({
-        data: { ...datos, usuario: { create: { ...cuenta, rol: 'alumno' } } },
-      });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        if (await this.buscarAlumnoPorMatricula(datos.matricula)) throw new MatriculaDuplicadaError(datos.matricula);
-        if (await this.buscarUsuarioPorCorreo(cuenta.correoInstitucional)) {
-          throw new CorreoDuplicadoError(cuenta.correoInstitucional);
-        }
-      }
-      throw error;
-    }
+  crearAlumno(datos: NuevoAlumno): Promise<Alumno> {
+    return this.prisma.alumno.create({ data: datos });
   }
 
-  async actualizarAlumno(id: number, cambios: CambiosDeAlumno): Promise<Alumno> {
-    try {
-      return await this.prisma.alumno.update({ where: { id }, data: cambios });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new AlumnoNoEncontradoError(String(id));
-      }
-      throw error;
-    }
+  actualizarAlumno(id: number, cambios: CambiosDeAlumno): Promise<Alumno> {
+    return this.prisma.alumno.update({ where: { id }, data: cambios });
   }
 
+  // Primero se borra su cuenta, porque el usuario apunta al alumno.
   async eliminarAlumno(id: number): Promise<void> {
-    try {
-      await this.prisma.$transaction([
-        this.prisma.usuario.deleteMany({ where: { alumnoId: id } }),
-        this.prisma.alumno.delete({ where: { id } }),
-      ]);
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') throw new AlumnoNoEncontradoError(String(id));
-        if (error.code === 'P2003') {
-          throw new PersonaConHistorialError('No se puede borrar el alumno porque ya tiene inscripciones o pagos registrados.');
-        }
-      }
-      throw error;
-    }
+    await this.prisma.usuario.deleteMany({ where: { alumnoId: id } });
+    await this.prisma.alumno.delete({ where: { id } });
   }
 
-  async crearMaestro(datos: NuevoMaestro, cuenta: DatosDeCuenta): Promise<Maestro> {
-    try {
-      return await this.prisma.maestro.create({
-        data: { ...datos, usuario: { create: { ...cuenta, rol: 'maestro' } } },
-      });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        if (await this.buscarMaestroPorNumeroEmpleado(datos.numeroEmpleado)) {
-          throw new NumeroEmpleadoDuplicadoError(datos.numeroEmpleado);
-        }
-        if (await this.buscarUsuarioPorCorreo(cuenta.correoInstitucional)) {
-          throw new CorreoDuplicadoError(cuenta.correoInstitucional);
-        }
-      }
-      throw error;
-    }
+  crearMaestro(datos: NuevoMaestro): Promise<Maestro> {
+    return this.prisma.maestro.create({ data: datos });
   }
 
-  async actualizarMaestro(id: number, nombre: string): Promise<Maestro> {
-    try {
-      return await this.prisma.maestro.update({ where: { id }, data: { nombre } });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new MaestroNoEncontradoError(String(id));
-      }
-      throw error;
-    }
+  actualizarMaestro(id: number, nombre: string): Promise<Maestro> {
+    return this.prisma.maestro.update({ where: { id }, data: { nombre } });
   }
 
+  // Primero se borra su cuenta, porque el usuario apunta al maestro.
   async eliminarMaestro(id: number): Promise<void> {
-    try {
-      await this.prisma.$transaction([
-        this.prisma.usuario.deleteMany({ where: { maestroId: id } }),
-        this.prisma.maestro.delete({ where: { id } }),
-      ]);
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') throw new MaestroNoEncontradoError(String(id));
-        if (error.code === 'P2003') {
-          throw new PersonaConHistorialError('No se puede borrar el maestro porque tiene grupos asignados.');
-        }
-      }
-      throw error;
-    }
+    await this.prisma.usuario.deleteMany({ where: { maestroId: id } });
+    await this.prisma.maestro.delete({ where: { id } });
   }
 
   listarAlumnos(): Promise<Alumno[]> {
