@@ -15,6 +15,10 @@ export interface DatosDePeriodo {
 export class PeriodosApi {
   private readonly http = inject(HttpClient);
 
+  listar() {
+    return this.http.get<Sobre<PeriodoEscolar[]>>(`${API_URL}/periodos`).pipe(map((r) => r.data));
+  }
+
   obtener(id: number) {
     return this.http.get<Sobre<PeriodoEscolar>>(`${API_URL}/periodos/${id}`).pipe(map((r) => r.data));
   }

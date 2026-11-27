@@ -7,6 +7,7 @@ import { GruposApi } from '../../servicios/grupos-api';
 import type { BloqueDeHorarioNuevo } from '../../servicios/grupos-api';
 import { ListaGrupos } from '../../servicios/lista-grupos';
 import { ListaMaterias } from '../../servicios/lista-materias';
+import { PeriodosApi } from '../../servicios/periodos-api';
 import { mensajeDeApi, mensajesDelCuerpo } from '../../servicios/errores';
 
 const DIAS: { valor: DiaSemana; nombre: string }[] = [
@@ -27,6 +28,7 @@ export class FormularioGrupo implements OnInit {
   protected readonly lista = inject(ListaGrupos);
   protected readonly materias = inject(ListaMaterias);
   private readonly api = inject(GruposApi);
+  private readonly periodosApi = inject(PeriodosApi);
   private readonly router = inject(Router);
 
   protected readonly dias = DIAS;
@@ -55,7 +57,18 @@ export class FormularioGrupo implements OnInit {
   ngOnInit(): void {
     // Se propone el período que se está viendo en la lista.
     const periodo = this.lista.periodoElegido();
-    if (periodo) this.form.patchValue({ periodoId: String(periodo) });
+    if (periodo) {
+      this.form.patchValue({ periodoId: String(periodo) });
+      return;
+    }
+
+    // Si entraron directo a /grupos/nuevo la lista aún no tiene los períodos:
+    // se piden y se propone el de carga abierta (o el último), igual que en la lista.
+    this.periodosApi.listar().subscribe((periodos) => {
+      if (this.f.periodoId.value) return;
+      const abierto = periodos.find((p) => p.habilitado) ?? periodos[periodos.length - 1];
+      if (abierto) this.form.patchValue({ periodoId: String(abierto.id) });
+    });
   }
 
   tieneCambios(): boolean {

@@ -62,7 +62,7 @@
                 {{ g.materiaNombre }}
                 <div class="dato__clave">{{ g.materiaClave }}</div>
               </td>
-              <td><a [routerLink]="['/grupos', g.grupoId]" [queryParams]="{ periodoId: p.id }">{{ g.grupoClave }}</a></td>
+              <td><a [routerLink]="['/grupos', g.grupoId]">{{ g.grupoClave }}</a></td>
               <td>{{ g.maestroNombre }}</td>
               <td>{{ textoDeHorario(g.horario) }}</td>
               <td class="numero">{{ inscritos(g) }} / {{ g.cupoMaximo }}</td>

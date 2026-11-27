@@ -7,17 +7,13 @@
     {{ error }}
     <button class="boton boton--chico" (click)="cargar()">Reintentar</button>
   </div>
-} @else if (cupos(); as o) {
+} @else if (grupo(); as g) {
   <a routerLink="/grupos">← Volver a grupos</a>
 
   <div class="encabezado" style="margin-top: 0.6rem">
     <div>
-      @if (grupo(); as g) {
-        <h1>{{ g.materiaNombre }} · grupo {{ g.grupoClave }}</h1>
-        <p>{{ g.materiaClave }} · período {{ g.periodoClave }}</p>
-      } @else {
-        <h1>Grupo {{ id() }}</h1>
-      }
+      <h1>{{ g.materiaNombre }} · grupo {{ g.grupoClave }}</h1>
+      <p>{{ g.materiaClave }} · período {{ g.periodoClave }} · {{ g.maestroNombre }}</p>
     </div>
     <div class="acciones">
       <button class="boton boton--peligro" (click)="eliminar()" [disabled]="ocupado()">Eliminar</button>
@@ -29,13 +25,13 @@
   }
 
   <div class="tarjeta" style="display: grid; gap: 0.5rem; margin-bottom: 1rem">
-    <div class="dato"><span class="dato__clave">Inscritos</span><span class="dato__valor">{{ o.ocupados }} de {{ cupoTotal(o) }}</span></div>
+    <div class="dato"><span class="dato__clave">Inscritos</span><span class="dato__valor">{{ inscritos(g) }} de {{ g.cupoMaximo }}</span></div>
     <div class="ocupacion">
       <div class="ocupacion__barra">
-        <div class="ocupacion__relleno" [class.ocupacion__relleno--lleno]="porcentaje(o) === 100"
-             [style.width.%]="porcentaje(o)"></div>
+        <div class="ocupacion__relleno" [class.ocupacion__relleno--lleno]="porcentaje(g) === 100"
+             [style.width.%]="porcentaje(g)"></div>
       </div>
-      <span class="dato__clave">{{ porcentaje(o) }}%</span>
+      <span class="dato__clave">{{ porcentaje(g) }}%</span>
     </div>
   </div>
 

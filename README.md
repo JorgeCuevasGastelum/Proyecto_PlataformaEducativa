@@ -150,6 +150,7 @@ Sin sesión solo se puede usar `POST /auth/login`.
 | DELETE | /periodos/:id | administrador | Borrar un período (RN-34) |
 | GET | /grupos | con sesión | Grupos del período abierto con lugares disponibles (`?periodoId=` para otro) |
 | POST | /grupos | administrador | Abrir grupo con maestro, cupo y horario |
+| GET | /grupos/:id | administrador | Ver un grupo con su materia, maestro, período y lugares disponibles |
 | PATCH | /grupos/:id | administrador | Cambiar el cupo o el maestro de un grupo |
 | DELETE | /grupos/:id | administrador | Borrar un grupo sin alumnos inscritos (RN-35) |
 | GET | /grupos/:id/ocupacion | administrador | Lugares ocupados y disponibles |
