@@ -3,6 +3,7 @@ import { computed, Service, signal } from '@angular/core';
 import { API_URL } from '../config';
 import type { GrupoDeCatalogo, Maestro, PeriodoEscolar, Sobre } from '../modelos/tipos';
 import { mensajeDeApi } from './errores';
+import { sinAcentos } from './formato';
 
 @Service()
 export class ListaGrupos {
@@ -41,9 +42,9 @@ export class ListaGrupos {
   // Se busca por materia, que es como el personal identifica un grupo.
   readonly visibles = computed(() => {
     const lista = this.grupos.value()?.data ?? [];
-    const t = this.texto().trim().toLowerCase();
+    const t = sinAcentos(this.texto().trim());
     if (!t) return lista;
-    return lista.filter((g) => g.materiaNombre.toLowerCase().includes(t) || g.materiaClave.toLowerCase().includes(t));
+    return lista.filter((g) => sinAcentos(g.materiaNombre).includes(t) || sinAcentos(g.materiaClave).includes(t));
   });
 
   recargar(): void {

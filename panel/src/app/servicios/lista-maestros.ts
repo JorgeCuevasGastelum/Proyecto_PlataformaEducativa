@@ -3,6 +3,7 @@ import { computed, Service, signal } from '@angular/core';
 import { API_URL } from '../config';
 import type { Maestro, Sobre } from '../modelos/tipos';
 import { mensajeDeApi } from './errores';
+import { sinAcentos } from './formato';
 
 @Service()
 export class ListaMaestros {
@@ -19,9 +20,9 @@ export class ListaMaestros {
 
   // Se busca por número de empleado o nombre.
   readonly visibles = computed(() => {
-    const t = this.texto().trim().toLowerCase();
+    const t = sinAcentos(this.texto().trim());
     return this.maestros().filter(
-      (m) => m.numeroEmpleado.toLowerCase().includes(t) || m.nombre.toLowerCase().includes(t),
+      (m) => sinAcentos(m.numeroEmpleado).includes(t) || sinAcentos(m.nombre).includes(t),
     );
   });
 

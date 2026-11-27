@@ -29,11 +29,14 @@
       @if (!id()) {
         <div class="campo">
           <label for="matricula">Matrícula</label>
-          <input id="matricula" formControlName="matricula" autocomplete="off" />
+          <input id="matricula" formControlName="matricula" autocomplete="off" (input)="matriculaRepetida.set(null)" />
           @if (campos.matricula.touched && campos.matricula.invalid) {
             <span class="error">
               {{ campos.matricula.hasError('maxlength') ? 'La matrícula es de máximo 20 caracteres.' : 'Escribe la matrícula.' }}
             </span>
+          }
+          @if (matriculaRepetida(); as mensaje) {
+            <span class="error">{{ mensaje }}</span>
           }
         </div>
       }
@@ -51,11 +54,14 @@
       @if (!id()) {
         <div class="campo">
           <label for="correo">Correo institucional</label>
-          <input id="correo" type="email" formControlName="correoInstitucional" autocomplete="off" />
+          <input id="correo" type="email" formControlName="correoInstitucional" autocomplete="off" (input)="correoRepetido.set(null)" />
           @if (campos.correoInstitucional.touched && campos.correoInstitucional.invalid) {
             <span class="error">
               {{ campos.correoInstitucional.hasError('required') ? 'Escribe el correo institucional.' : 'Escribe un correo válido de hasta 120 caracteres.' }}
             </span>
+          }
+          @if (correoRepetido(); as mensaje) {
+            <span class="error">{{ mensaje }}</span>
           }
         </div>
         <div class="campo">

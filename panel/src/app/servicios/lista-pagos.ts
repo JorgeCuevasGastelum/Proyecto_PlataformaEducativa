@@ -3,7 +3,7 @@ import { computed, Service, signal } from '@angular/core';
 import { API_URL } from '../config';
 import type { Alumno, Pago, PeriodoEscolar, Sobre } from '../modelos/tipos';
 import { mensajeDeApi } from './errores';
-import { estaVencido } from './formato';
+import { estaVencido, sinAcentos } from './formato';
 
 export type FiltroDePago = 'todos' | 'pendientes' | 'vencidos' | 'pagados';
 
@@ -55,11 +55,11 @@ export class ListaPagos {
   });
 
   readonly visibles = computed(() => {
-    const t = this.texto().trim().toLowerCase();
+    const t = sinAcentos(this.texto().trim());
     const filtro = this.filtro();
 
     return this.renglones().filter((r) => {
-      if (t && !r.alumno.toLowerCase().includes(t) && !r.matricula.toLowerCase().includes(t)) {
+      if (t && !sinAcentos(r.alumno).includes(t) && !sinAcentos(r.matricula).includes(t)) {
         return false;
       }
       if (filtro === 'pendientes') return r.pago.estado === 'pendiente';

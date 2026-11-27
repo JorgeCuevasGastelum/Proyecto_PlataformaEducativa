@@ -26,6 +26,9 @@ export class FormularioAlumno implements OnInit {
   protected readonly noExiste = signal(false);
   protected readonly errorCarga = signal<string | null>(null);
   protected readonly errorGuardado = signal<string | null>(null);
+  // Si el servicio dice que la matrícula o el correo ya existen, se muestra junto a ese campo.
+  protected readonly matriculaRepetida = signal<string | null>(null);
+  protected readonly correoRepetido = signal<string | null>(null);
   protected readonly minimoContrasena = LONGITUD_MINIMA_CONTRASENA;
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
@@ -78,6 +81,8 @@ export class FormularioAlumno implements OnInit {
 
     this.guardando.set(true);
     this.errorGuardado.set(null);
+    this.matriculaRepetida.set(null);
+    this.correoRepetido.set(null);
 
     const id = this.id();
     const peticion = id
@@ -97,8 +102,11 @@ export class FormularioAlumno implements OnInit {
         this.lista.recargar();
         this.router.navigate(['/alumnos', alumno.id]);
       },
-      error: (e) => {
-        this.errorGuardado.set(mensajeDeApi(e));
+      error: (e: HttpErrorResponse) => {
+        const mensaje = mensajeDeApi(e);
+        if (!id && e.status === 409 && mensaje.includes('correo')) this.correoRepetido.set(mensaje);
+        else if (!id && e.status === 409 && mensaje.includes('matrícula')) this.matriculaRepetida.set(mensaje);
+        else this.errorGuardado.set(mensaje);
         this.guardando.set(false);
       },
     });
