@@ -20,4 +20,12 @@ export class ServicioAutenticacion {
 
     return { usuarioId: usuario.id, rol: usuario.rol, personaId: usuario.personaId };
   }
+
+  async validarSesion(sesion: Sesion): Promise<Sesion> {
+    const usuario = await this.repo.buscarUsuarioPorId(sesion.usuarioId);
+    if (!usuario || usuario.rol !== sesion.rol || usuario.personaId !== sesion.personaId) {
+      throw new CredencialesInvalidasError();
+    }
+    return sesion;
+  }
 }

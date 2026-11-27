@@ -19,7 +19,7 @@ import {
   PeriodoNoEncontradoError,
 } from './errores.js';
 import type { RepositorioAcademico } from './repositorio-academico.js';
-import { alumnosInscritosEnGrupo } from './consultas.js';
+import { alumnosInscritosEnGrupo, gruposAsignadosAMaestro } from './consultas.js';
 import { cargaEstaAbierta, exigirRol } from './reglas.js';
 
 export class ServicioMaestro {
@@ -27,21 +27,7 @@ export class ServicioMaestro {
 
   async consultarMisGrupos(sesion: Sesion): Promise<GrupoDelMaestro[]> {
     const maestro = await this.obtenerMaestro(sesion);
-    const grupos = await this.repo.listarGruposDeMaestro(maestro.id);
-
-    const resultado: GrupoDelMaestro[] = [];
-    for (const grupo of grupos) {
-      const materia = await this.repo.buscarMateriaPorId(grupo.materiaId);
-      const periodo = await this.repo.buscarPeriodoPorId(grupo.periodoId);
-      resultado.push({
-        grupoId: grupo.id,
-        grupoClave: grupo.clave,
-        materiaNombre: materia?.nombre ?? String(grupo.materiaId),
-        periodoClave: periodo?.clave ?? String(grupo.periodoId),
-        inscritos: await this.repo.contarInscripcionesActivasDeGrupo(grupo.id),
-      });
-    }
-    return resultado;
+    return gruposAsignadosAMaestro(this.repo, maestro.id);
   }
 
   async consultarListaDeGrupo(sesion: Sesion, grupoId: number): Promise<AlumnoEnLista[]> {

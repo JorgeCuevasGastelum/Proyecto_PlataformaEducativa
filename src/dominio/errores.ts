@@ -52,6 +52,8 @@ export class AlumnoNoEncontradoError extends ErrorDeDominio {
   }
 }
 
+export class PersonaConHistorialError extends ErrorDeDominio {}
+
 export class MaestroInvalidoError extends ErrorDeDominio {
   constructor(motivo: string) {
     super(`Maestro no válido: ${motivo}`);
