@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import type { AlumnoEnLista, GrupoDeCatalogo } from '../../modelos/tipos';
 import { NoEncontrado } from '../no-encontrado';
 import { GruposApi } from '../../servicios/grupos-api';
-import type { CambiosDeGrupo, CuposDeGrupo } from '../../servicios/grupos-api';
+import type { CambiosDeGrupo } from '../../servicios/grupos-api';
 import { ListaGrupos } from '../../servicios/lista-grupos';
 import { mensajeDeApi } from '../../servicios/errores';
 
@@ -24,11 +24,9 @@ export class DetalleGrupo implements OnInit {
   private readonly api = inject(GruposApi);
   private readonly router = inject(Router);
 
-  // Vienen de la ruta /grupos/:id?periodoId=2
+  // Viene de la ruta /grupos/:id
   readonly id = input<string>();
-  readonly periodoId = input<string>();
 
-  protected readonly cupos = signal<CuposDeGrupo | null>(null);
   protected readonly grupo = signal<GrupoDeCatalogo | null>(null);
   protected readonly alumnos = signal<AlumnoEnLista[]>([]);
   protected readonly cargando = signal(true);
@@ -53,15 +51,16 @@ export class DetalleGrupo implements OnInit {
   protected cargar(): void {
     this.cargando.set(true);
     this.errorCarga.set(null);
-    this.traerDatos();
+    this.traerGrupo();
   }
 
-  private traerDatos(): void {
-    this.api.ocupacion(Number(this.id())).subscribe({
-      next: (cupos) => {
-        this.cupos.set(cupos);
-        this.form.reset({ cupoMaximo: cupos.ocupados + cupos.disponibles, maestroId: '' });
-        this.traerGrupo();
+  // Primero el grupo (con su materia, maestro y lugares) y después sus alumnos.
+  private traerGrupo(): void {
+    this.api.obtener(Number(this.id())).subscribe({
+      next: (grupo) => {
+        this.grupo.set(grupo);
+        this.form.reset({ cupoMaximo: grupo.cupoMaximo, maestroId: '' });
+        this.traerAlumnos();
       },
       error: (e: HttpErrorResponse) => {
         // Un id que no es número también es "no existe" (el servicio responde 400).
@@ -69,23 +68,6 @@ export class DetalleGrupo implements OnInit {
         else this.errorCarga.set(mensajeDeApi(e));
         this.cargando.set(false);
       },
-    });
-  }
-
-  // El servicio no tiene un GET de un solo grupo: sus datos se sacan de la lista del período.
-  private traerGrupo(): void {
-    const periodo = this.periodoId() ? Number(this.periodoId()) : this.lista.periodoElegido();
-    if (!periodo) {
-      this.traerAlumnos();
-      return;
-    }
-
-    this.api.listarDePeriodo(periodo).subscribe({
-      next: (grupos) => {
-        this.grupo.set(grupos.find((g) => g.grupoId === Number(this.id())) ?? null);
-        this.traerAlumnos();
-      },
-      error: () => this.traerAlumnos(),
     });
   }
 
@@ -102,14 +84,13 @@ export class DetalleGrupo implements OnInit {
     });
   }
 
-  protected cupoTotal(cupos: CuposDeGrupo): number {
-    return cupos.ocupados + cupos.disponibles;
+  protected inscritos(grupo: GrupoDeCatalogo): number {
+    return grupo.cupoMaximo - grupo.disponibles;
   }
 
-  protected porcentaje(cupos: CuposDeGrupo): number {
-    const total = this.cupoTotal(cupos);
-    if (total === 0) return 100;
-    return Math.min(100, Math.round((cupos.ocupados * 100) / total));
+  protected porcentaje(grupo: GrupoDeCatalogo): number {
+    if (grupo.cupoMaximo === 0) return 100;
+    return Math.min(100, Math.round((this.inscritos(grupo) * 100) / grupo.cupoMaximo));
   }
 
   protected cambiar(): void {
@@ -129,7 +110,7 @@ export class DetalleGrupo implements OnInit {
         this.mensaje.set({ tipo: 'exito', texto: 'Se guardaron los cambios del grupo.' });
         this.ocupado.set(false);
         this.lista.recargar();
-        this.traerDatos();
+        this.traerGrupo();
       },
       error: (e) => {
         this.mensaje.set({ tipo: 'error', texto: mensajeDeApi(e) });
@@ -140,12 +121,12 @@ export class DetalleGrupo implements OnInit {
 
   protected eliminar(): void {
     const g = this.grupo();
-    const nombre = g ? `${g.grupoClave} de ${g.materiaNombre}` : this.id();
-    if (!confirm(`¿Seguro que quieres eliminar el grupo ${nombre}? Esto no se puede deshacer.`)) return;
+    if (!g) return;
+    if (!confirm(`¿Seguro que quieres eliminar el grupo ${g.grupoClave} de ${g.materiaNombre}? Esto no se puede deshacer.`)) return;
 
     this.ocupado.set(true);
     this.mensaje.set(null);
-    this.api.eliminar(Number(this.id())).subscribe({
+    this.api.eliminar(g.grupoId).subscribe({
       next: () => {
         this.lista.recargar();
         this.router.navigate(['/grupos']);

@@ -19,12 +19,6 @@ export interface DatosNuevoGrupo {
   horario: BloqueDeHorarioNuevo[];
 }
 
-// Lo que responde GET /grupos/:id/ocupacion.
-export interface CuposDeGrupo {
-  ocupados: number;
-  disponibles: number;
-}
-
 export interface CambiosDeGrupo {
   cupoMaximo: number;
   maestroId?: number;
@@ -40,8 +34,8 @@ export class GruposApi {
       .pipe(map((r) => r.data));
   }
 
-  ocupacion(id: number) {
-    return this.http.get<Sobre<CuposDeGrupo>>(`${API_URL}/grupos/${id}/ocupacion`).pipe(map((r) => r.data));
+  obtener(id: number) {
+    return this.http.get<Sobre<GrupoDeCatalogo>>(`${API_URL}/grupos/${id}`).pipe(map((r) => r.data));
   }
 
   alumnos(id: number) {
